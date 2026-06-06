@@ -3,8 +3,14 @@ import 'dart:convert';
 
 import 'package:emergency_front_end/core/utils/distance_utils.dart';
 import 'package:emergency_front_end/core/utils/launcher_utils.dart';
+import 'package:emergency_front_end/features/map/data/emergency_places.dart';
+import 'package:emergency_front_end/features/map/models/emergency_place.dart';
+import 'package:emergency_front_end/features/map/models/emergency_place_distance.dart';
+import 'package:emergency_front_end/features/map/models/route_data.dart';
+import 'package:emergency_front_end/features/map/widgets/map_header.dart';
+import 'package:emergency_front_end/features/map/widgets/map_info_card.dart';
+import 'package:emergency_front_end/features/map/widgets/service_marker.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
-import 'package:emergency_front_end/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -26,8 +32,8 @@ class _MapScreenState extends State<MapScreen> {
 
   StreamSubscription<Position>? _positionSubscription;
   Position? _currentPosition;
-  _EmergencyPlace? _selectedPlace;
-  _RouteData? _activeRoute;
+  EmergencyPlace? _selectedPlace;
+  RouteData? _activeRoute;
 
   bool _isLoadingLocation = true;
   bool _isLoadingRoute = false;
@@ -36,51 +42,6 @@ class _MapScreenState extends State<MapScreen> {
 
   String? _locationMessage;
   String? _routeMessage;
-
-  final List<_EmergencyPlace> _places = const [
-    _EmergencyPlace(
-      name: 'Road Traffic Police Station',
-      type: EmergencyPlaceType.police,
-      position: LatLng(11.567026688275075, 104.88993483957647),
-      address: 'Toul kork, Phnom Penh',
-    ),
-    _EmergencyPlace(
-      name: 'Teuk Laok 2 Police Station',
-      type: EmergencyPlaceType.police,
-      position: LatLng(11.563483167664263, 104.89847623289963),
-      address: 'Teuk Laok 2, Phnom Penh',
-    ),
-    _EmergencyPlace(
-      name: 'Calmette Hospital',
-      type: EmergencyPlaceType.hospital,
-      position: LatLng(11.581249846995929, 104.91659107340058),
-      address: 'Daun Penh, Phnom Penh',
-    ),
-    _EmergencyPlace(
-      name: 'Preah Kossomak Hospital',
-      type: EmergencyPlaceType.hospital,
-      position: LatLng(11.564278727369357, 104.88979557938497),
-      address: 'Toul Kork, Phnom Penh',
-    ),
-    _EmergencyPlace(
-      name: 'Preah Ket Mealea Hospital',
-      type: EmergencyPlaceType.hospital,
-      position: LatLng(11.580089610079789, 104.92175853518351),
-      address: '7 Makara, Phnom Penh',
-    ),
-    _EmergencyPlace(
-      name: 'Olympia City Fire Station',
-      type: EmergencyPlaceType.fireStation,
-      position: LatLng(11.560595328679938, 104.91573581716146),
-      address: 'Olympic, Phnom Penh',
-    ),
-    _EmergencyPlace(
-      name: 'Koh Pich Fire Station',
-      type: EmergencyPlaceType.fireStation,
-      position: LatLng(11.55096730920578, 104.94291523979894),
-      address: 'Chamkar Mon, Phnom Penh',
-    ),
-  ];
 
   @override
   void initState() {
@@ -200,7 +161,7 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  void _selectPlace(_EmergencyPlace place) {
+  void _selectPlace(EmergencyPlace place) {
     setState(() {
       _selectedPlace = place;
       _isPanelExpanded = true;
@@ -210,7 +171,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _loadRouteToPlace(
-    _EmergencyPlace place, {
+    EmergencyPlace place, {
     bool fitRoute = true,
   }) async {
     final user = _currentPosition;
@@ -266,7 +227,7 @@ class _MapScreenState extends State<MapScreen> {
       }
 
       setState(() {
-        _activeRoute = _RouteData(
+        _activeRoute = RouteData(
           points: points,
           distanceKm: ((route['distance'] as num?)?.toDouble() ?? 0) / 1000,
           durationMinutes: ((route['duration'] as num?)?.toDouble() ?? 0) / 60,
@@ -341,20 +302,20 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  List<_EmergencyPlaceDistance> _sortedPlaces() {
+  List<EmergencyPlaceDistance> _sortedPlaces() {
     final user = _currentPosition;
     if (user == null) {
-      return _places
+      return emergencyPlaces
           .map(
-            (place) => _EmergencyPlaceDistance(place: place, distanceKm: null),
+            (place) => EmergencyPlaceDistance(place: place, distanceKm: null),
           )
           .toList();
     }
 
     final current = LatLng(user.latitude, user.longitude);
-    final places = _places
+    final places = emergencyPlaces
         .map(
-          (place) => _EmergencyPlaceDistance(
+          (place) => EmergencyPlaceDistance(
             place: place,
             distanceKm: DistanceUtils.kilometersBetween(
               current,
@@ -378,7 +339,7 @@ class _MapScreenState extends State<MapScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const _MapHeader(),
+            const MapHeader(),
             Expanded(
               child: Stack(
                 children: [
@@ -411,7 +372,7 @@ class _MapScreenState extends State<MapScreen> {
                         ),
                       MarkerLayer(
                         markers: [
-                          ..._places.map(_buildServiceMarker),
+                          ...emergencyPlaces.map(_buildServiceMarker),
                           if (_currentPosition != null)
                             _buildUserMarker(_currentPosition!),
                         ],
@@ -449,7 +410,7 @@ class _MapScreenState extends State<MapScreen> {
                     left: 14,
                     right: 14,
                     bottom: 14,
-                    child: _MapInfoCard(
+                    child: MapInfoCard(
                       isExpanded: _isPanelExpanded,
                       isLoadingLocation: _isLoadingLocation,
                       isLoadingRoute: _isLoadingRoute,
@@ -475,7 +436,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Marker _buildServiceMarker(_EmergencyPlace place) {
+  Marker _buildServiceMarker(EmergencyPlace place) {
     final isSelected = _selectedPlace == place;
 
     return Marker(
@@ -484,7 +445,7 @@ class _MapScreenState extends State<MapScreen> {
       height: isSelected ? 54 : 44,
       child: GestureDetector(
         onTap: () => _selectPlace(place),
-        child: _ServiceMarker(place: place, isSelected: isSelected),
+        child: ServiceMarker(place: place, isSelected: isSelected),
       ),
     );
   }
@@ -513,523 +474,4 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
   }
-}
-
-class _MapHeader extends StatelessWidget {
-  const _MapHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.location_on_outlined,
-            color: AppColors.primaryRed,
-            size: 18,
-          ),
-          const SizedBox(width: 6),
-          const Text('KhmerSOS', style: AppTextStyles.appTitle),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.lightRed,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Text(
-              'Cambodia',
-              style: TextStyle(
-                color: AppColors.primaryRed,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MapInfoCard extends StatelessWidget {
-  const _MapInfoCard({
-    required this.isExpanded,
-    required this.isLoadingLocation,
-    required this.isLoadingRoute,
-    required this.isLaunchingDirections,
-    required this.locationMessage,
-    required this.routeMessage,
-    required this.currentPosition,
-    required this.selectedPlace,
-    required this.activeRoute,
-    required this.places,
-    required this.onRefreshLocation,
-    required this.onPlaceSelected,
-    required this.onOpenDirections,
-    required this.onToggleExpanded,
-  });
-
-  final bool isExpanded;
-  final bool isLoadingLocation;
-  final bool isLoadingRoute;
-  final bool isLaunchingDirections;
-  final String? locationMessage;
-  final String? routeMessage;
-  final Position? currentPosition;
-  final _EmergencyPlace? selectedPlace;
-  final _RouteData? activeRoute;
-  final List<_EmergencyPlaceDistance> places;
-  final Future<void> Function() onRefreshLocation;
-  final ValueChanged<_EmergencyPlace> onPlaceSelected;
-  final Future<void> Function() onOpenDirections;
-  final VoidCallback onToggleExpanded;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!isExpanded) {
-      return _CollapsedMapPanel(
-        selectedPlace: selectedPlace,
-        activeRoute: activeRoute,
-        isLoadingRoute: isLoadingRoute,
-        onTap: onToggleExpanded,
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Emergency routes',
-                  style: AppTextStyles.sectionTitle,
-                ),
-              ),
-              IconButton(
-                onPressed: onToggleExpanded,
-                icon: const Icon(Icons.close_fullscreen, size: 18),
-                visualDensity: VisualDensity.compact,
-              ),
-              TextButton.icon(
-                onPressed: onRefreshLocation,
-                icon: const Icon(Icons.gps_fixed, size: 16),
-                label: const Text('Refresh'),
-              ),
-            ],
-          ),
-          if (isLoadingLocation)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 10),
-              child: LinearProgressIndicator(
-                minHeight: 4,
-                color: AppColors.primaryRed,
-                backgroundColor: AppColors.lightRed,
-              ),
-            )
-          else if (locationMessage != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(locationMessage!, style: AppTextStyles.body),
-            )
-          else if (currentPosition != null)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 10),
-              child: Text(
-                'Your live location is active. Tap any emergency place to load a real road route.',
-                style: AppTextStyles.body,
-              ),
-            ),
-          if (routeMessage != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(routeMessage!, style: AppTextStyles.body),
-            ),
-          if (selectedPlace != null) ...[
-            _SelectedPlaceCard(
-              place: selectedPlace!,
-              currentPosition: currentPosition,
-              activeRoute: activeRoute,
-              isLoadingRoute: isLoadingRoute,
-              onOpenDirections: onOpenDirections,
-              isLaunchingDirections: isLaunchingDirections,
-            ),
-            const SizedBox(height: 12),
-          ],
-          const Text('Tap a place to route', style: AppTextStyles.label),
-          const SizedBox(height: 8),
-          ...places.map(
-            (item) => _NearbyPlaceTile(
-              item: item,
-              isSelected: selectedPlace == item.place,
-              onTap: () => onPlaceSelected(item.place),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SelectedPlaceCard extends StatelessWidget {
-  const _SelectedPlaceCard({
-    required this.place,
-    required this.currentPosition,
-    required this.activeRoute,
-    required this.isLoadingRoute,
-    required this.onOpenDirections,
-    required this.isLaunchingDirections,
-  });
-
-  final _EmergencyPlace place;
-  final Position? currentPosition;
-  final _RouteData? activeRoute;
-  final bool isLoadingRoute;
-  final Future<void> Function() onOpenDirections;
-  final bool isLaunchingDirections;
-
-  @override
-  Widget build(BuildContext context) {
-    final distanceLabel = activeRoute != null
-        ? '${activeRoute!.distanceKm.toStringAsFixed(1)} km road route'
-        : currentPosition == null
-        ? 'Waiting for your location'
-        : '${DistanceUtils.kilometersBetween(LatLng(currentPosition!.latitude, currentPosition!.longitude), place.position).toStringAsFixed(1)} km away';
-
-    final durationLabel = activeRoute == null
-        ? null
-        : '${activeRoute!.durationMinutes.round()} min estimated drive';
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: place.type.color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: place.type.color.withValues(alpha: 0.18)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: place.type.color,
-                child: Icon(place.type.icon, color: Colors.white, size: 18),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(place.name, style: AppTextStyles.label),
-                    const SizedBox(height: 2),
-                    Text(place.address, style: AppTextStyles.small),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            isLoadingRoute
-                ? 'Loading the road route to this emergency place...'
-                : 'Road-following route loaded for this emergency place.',
-            style: AppTextStyles.body,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            distanceLabel,
-            style: TextStyle(
-              color: place.type.color,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          if (durationLabel != null) ...[
-            const SizedBox(height: 2),
-            Text(durationLabel, style: AppTextStyles.small),
-          ],
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed:
-                  currentPosition == null ||
-                      isLaunchingDirections ||
-                      isLoadingRoute
-                  ? null
-                  : onOpenDirections,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: place.type.color,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              icon: isLaunchingDirections
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.navigation),
-              label: Text(
-                isLaunchingDirections ? 'Opening...' : 'Live Navigation',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NearbyPlaceTile extends StatelessWidget {
-  const _NearbyPlaceTile({
-    required this.item,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final _EmergencyPlaceDistance item;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? item.place.type.color.withValues(alpha: 0.08)
-              : const Color(0xFFF7F7F7),
-          borderRadius: BorderRadius.circular(14),
-          border: isSelected
-              ? Border.all(color: item.place.type.color.withValues(alpha: 0.35))
-              : null,
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: item.place.type.color.withValues(alpha: 0.12),
-              child: Icon(
-                item.place.type.icon,
-                size: 18,
-                color: item.place.type.color,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.place.name, style: AppTextStyles.label),
-                  const SizedBox(height: 2),
-                  Text(item.place.address, style: AppTextStyles.small),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  item.distanceKm == null
-                      ? 'Nearby'
-                      : '${item.distanceKm!.toStringAsFixed(1)} km',
-                  style: TextStyle(
-                    color: item.place.type.color,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  isSelected ? 'Selected' : 'Route',
-                  style: TextStyle(
-                    color: item.place.type.color,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CollapsedMapPanel extends StatelessWidget {
-  const _CollapsedMapPanel({
-    required this.selectedPlace,
-    required this.activeRoute,
-    required this.isLoadingRoute,
-    required this.onTap,
-  });
-
-  final _EmergencyPlace? selectedPlace;
-  final _RouteData? activeRoute;
-  final bool isLoadingRoute;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final title = selectedPlace?.name ?? 'Emergency routes';
-    final subtitle = isLoadingRoute
-        ? 'Loading road route...'
-        : activeRoute != null
-        ? '${activeRoute!.distanceKm.toStringAsFixed(1)} km | ${activeRoute!.durationMinutes.round()} min'
-        : 'Tap to show routes and directions';
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.96),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 18,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.alt_route, color: AppColors.primaryRed),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTextStyles.label,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: AppTextStyles.small),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Icon(Icons.keyboard_arrow_up, color: AppColors.textGrey),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ServiceMarker extends StatelessWidget {
-  const _ServiceMarker({required this.place, required this.isSelected});
-
-  final _EmergencyPlace place;
-  final bool isSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: place.type.color,
-        borderRadius: BorderRadius.circular(isSelected ? 18 : 14),
-        border: Border.all(
-          color: isSelected ? AppColors.primaryRed : Colors.white,
-          width: isSelected ? 3.5 : 2.5,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Icon(
-        place.type.icon,
-        color: Colors.white,
-        size: isSelected ? 24 : 20,
-      ),
-    );
-  }
-}
-
-enum EmergencyPlaceType {
-  police(AppColors.policeBlue, Icons.shield_outlined),
-  hospital(AppColors.hospitalRed, Icons.local_hospital),
-  fireStation(AppColors.fireOrange, Icons.local_fire_department);
-
-  const EmergencyPlaceType(this.color, this.icon);
-
-  final Color color;
-  final IconData icon;
-}
-
-class _EmergencyPlace {
-  const _EmergencyPlace({
-    required this.name,
-    required this.type,
-    required this.position,
-    required this.address,
-  });
-
-  final String name;
-  final EmergencyPlaceType type;
-  final LatLng position;
-  final String address;
-}
-
-class _EmergencyPlaceDistance {
-  const _EmergencyPlaceDistance({
-    required this.place,
-    required this.distanceKm,
-  });
-
-  final _EmergencyPlace place;
-  final double? distanceKm;
-}
-
-class _RouteData {
-  const _RouteData({
-    required this.points,
-    required this.distanceKm,
-    required this.durationMinutes,
-    required this.origin,
-  });
-
-  final List<LatLng> points;
-  final double distanceKm;
-  final double durationMinutes;
-  final LatLng origin;
 }
