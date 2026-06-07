@@ -4,10 +4,7 @@ import '../theme/app_colors.dart';
 class EmergencySosButton extends StatelessWidget {
   final VoidCallback? onLongPress;
 
-  const EmergencySosButton({
-    super.key,
-    this.onLongPress,
-  });
+  const EmergencySosButton({super.key, this.onLongPress});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +19,7 @@ class EmergencySosButton extends StatelessWidget {
           border: Border.all(color: Colors.white, width: 5),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryRed.withOpacity(0.28),
+              color: AppColors.primaryRed.withValues(alpha: 0.28),
               blurRadius: 18,
               offset: const Offset(0, 9),
             ),
