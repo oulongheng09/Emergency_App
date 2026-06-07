@@ -1,74 +1,57 @@
-// TODO: add service list screen.
+import 'package:emergency_front_end/features/services/data/service_catalog.dart';
+import 'package:emergency_front_end/features/services/models/emergency_service_kind.dart';
+import 'package:emergency_front_end/features/services/service_detail_screen.dart';
+import 'package:emergency_front_end/features/services/widgets/nearby_service_card.dart';
+import 'package:emergency_front_end/features/services/widgets/service_screen_shell.dart';
+import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
 
 class ServiceListScreen extends StatelessWidget {
-  final String serviceName;
+  const ServiceListScreen({super.key, required this.kind});
 
-  const ServiceListScreen({
-    super.key,
-    required this.serviceName,
-  });
+  final EmergencyServiceKind kind;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(serviceName),
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.textDark,
-        elevation: 0,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+    final items = locationsForKind(kind);
+
+    return ServiceScreenShell(
+      title: kind.navigationTitle,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(8, 2, 8, 20),
         children: [
-          _ServiceCard(
-            name: '$serviceName Center 1',
-            phone: '+855 12 345 678',
-            address: 'Phnom Penh, Cambodia',
+          Text(
+            kind.listTitle,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: AppColors.primaryRed,
+              height: 0.95,
+            ),
           ),
-          _ServiceCard(
-            name: '$serviceName Center 2',
-            phone: '+855 98 765 432',
-            address: 'BKK1, Phnom Penh',
+          const SizedBox(height: 6),
+          const Text(
+            'Found emergency facilities in your radius.',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textGrey,
+            ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ServiceCard extends StatelessWidget {
-  final String name;
-  final String phone;
-  final String address;
-
-  const _ServiceCard({
-    required this.name,
-    required this.phone,
-    required this.address,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(name, style: AppTextStyles.sectionTitle),
-          const SizedBox(height: 8),
-          Text(phone, style: AppTextStyles.body),
-          const SizedBox(height: 4),
-          Text(address, style: AppTextStyles.body),
+          const SizedBox(height: 16),
+          for (final item in items) ...[
+            NearbyServiceCard(
+              location: item,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ServiceDetailScreen(location: item),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
         ],
       ),
     );

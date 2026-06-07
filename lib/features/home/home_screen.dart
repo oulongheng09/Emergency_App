@@ -1,19 +1,21 @@
+import 'package:emergency_front_end/features/nearby/nearby_screen.dart';
 import 'package:emergency_front_end/features/profile/profile_screen.dart';
+import 'package:emergency_front_end/features/services/models/emergency_service_kind.dart';
+import 'package:emergency_front_end/features/services/service_list_screen.dart';
+import 'package:emergency_front_end/theme/app_colors.dart';
+import 'package:emergency_front_end/theme/app_text_styles.dart';
+import 'package:emergency_front_end/widgets/emergency_sos_button.dart';
+import 'package:emergency_front_end/widgets/quick_action_tile.dart';
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
-import '../../widgets/emergency_sos_button.dart';
-import '../../widgets/quick_action_tile.dart';
-import '../services/service_list_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   static const services = [
-    _ServiceItem('POLICE', Icons.security, AppColors.policeBlue),
-    _ServiceItem('HOSPITAL', Icons.local_hospital, AppColors.hospitalRed),
-    _ServiceItem('FIRE DEPT', Icons.fire_truck, AppColors.fireOrange),
-    _ServiceItem('AMBULANCE', Icons.emergency, AppColors.ambulanceRed),
+    EmergencyServiceKind.police,
+    EmergencyServiceKind.hospital,
+    EmergencyServiceKind.fireDepartment,
+    EmergencyServiceKind.ambulance,
   ];
 
   @override
@@ -30,9 +32,7 @@ class HomeScreen extends StatelessWidget {
               EmergencySosButton(
                 onLongPress: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Mock SOS activated'),
-                    ),
+                    const SnackBar(content: Text('Mock SOS activated')),
                   );
                 },
               ),
@@ -50,17 +50,10 @@ class HomeScreen extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final item = services[index];
                   return QuickActionTile(
-                    title: item.title,
+                    title: item.homeLabel,
                     icon: item.icon,
                     iconColor: item.color,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                        builder: (_) => ServiceListScreen(serviceName: item.title),
-    ),
-  );
-},
+                    onTap: () => _openServiceFlow(context, item),
                   );
                 },
               ),
@@ -70,9 +63,17 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _openServiceFlow(BuildContext context, EmergencyServiceKind kind) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => kind.usesListFlow
+            ? ServiceListScreen(kind: kind)
+            : NearbyScreen(kind: kind),
+      ),
+    );
+  }
 }
-
-
 
 class _LocationHeader extends StatelessWidget {
   const _LocationHeader();
@@ -109,23 +110,12 @@ class _LocationHeader extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.settings_outlined, size: 20),
           onPressed: () {
-            Navigator.push(
+            Navigator.of(
               context,
-              MaterialPageRoute(
-                builder: (_) => const ProfileScreen(),
-      ),
-    );
-  },
-),
+            ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
+          },
+        ),
       ],
     );
   }
-}
-
-class _ServiceItem {
-  final String title;
-  final IconData icon;
-  final Color color;
-
-  const _ServiceItem(this.title, this.icon, this.color);
 }

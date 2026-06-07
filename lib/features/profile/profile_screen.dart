@@ -16,11 +16,11 @@ class ProfileScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-           Navigator.pop(context);
-      },
-    ),
-    title: const Text('Profile'),
-  ),
+            Navigator.pop(context);
+          },
+        ),
+        title: const Text('Profile'),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
@@ -175,11 +175,7 @@ class _SectionCard extends StatelessWidget {
   final IconData? icon;
   final Widget child;
 
-  const _SectionCard({
-    required this.child,
-    this.title,
-    this.icon,
-  });
+  const _SectionCard({required this.child, this.title, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +183,7 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.lightRed.withOpacity(0.55),
+        color: AppColors.lightRed.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
@@ -217,11 +213,7 @@ class _MockField extends StatelessWidget {
   final String value;
   final IconData? suffixIcon;
 
-  const _MockField({
-    required this.label,
-    required this.value,
-    this.suffixIcon,
-  });
+  const _MockField({required this.label, required this.value, this.suffixIcon});
 
   @override
   Widget build(BuildContext context) {
@@ -255,10 +247,7 @@ class _MockLargeField extends StatelessWidget {
   final String label;
   final String value;
 
-  const _MockLargeField({
-    required this.label,
-    required this.value,
-  });
+  const _MockLargeField({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
