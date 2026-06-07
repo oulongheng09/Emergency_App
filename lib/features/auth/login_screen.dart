@@ -6,10 +6,7 @@ import '../../widgets/primary_button.dart';
 class LoginScreen extends StatelessWidget {
   final VoidCallback onLogin;
 
-  const LoginScreen({
-    super.key,
-    required this.onLogin,
-  });
+  const LoginScreen({super.key, required this.onLogin});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +23,7 @@ class LoginScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 16,
                   ),
                 ],
@@ -122,11 +119,7 @@ class _MockField extends StatelessWidget {
   final String hint;
   final IconData? suffixIcon;
 
-  const _MockField({
-    required this.label,
-    required this.hint,
-    this.suffixIcon,
-  });
+  const _MockField({required this.label, required this.hint, this.suffixIcon});
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +129,6 @@ class _MockField extends StatelessWidget {
         Text(label, style: AppTextStyles.label),
         const SizedBox(height: 6),
         TextField(
-          
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: AppTextStyles.small,

@@ -4,10 +4,7 @@ import '../../theme/app_colors.dart';
 class SplashScreen extends StatelessWidget {
   final VoidCallback onFinish;
 
-  const SplashScreen({
-    super.key,
-    required this.onFinish,
-  });
+  const SplashScreen({super.key, required this.onFinish});
 
   @override
   Widget build(BuildContext context) {

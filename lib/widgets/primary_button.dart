@@ -24,9 +24,7 @@ class PrimaryButton extends StatelessWidget {
           backgroundColor: AppColors.primaryRed,
           foregroundColor: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(7),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
         ),
         onPressed: onPressed,
         child: Row(
