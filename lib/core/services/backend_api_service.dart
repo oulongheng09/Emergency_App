@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:http/http.dart' as http;
 import '../../models/backend_session.dart';
 import '../../models/backend_user.dart';
 import '../constants/app_constants.dart';
@@ -18,9 +18,6 @@ class BackendApiService {
   BackendApiService._();
 
   static final BackendApiService instance = BackendApiService._();
-
-  final HttpClient _client = HttpClient()
-    ..connectionTimeout = const Duration(seconds: 12);
 
   Future<BackendSession> login({
     required String email,
@@ -56,7 +53,7 @@ class BackendApiService {
     final data = await _getJson(
       '/auth/me',
       headers: <String, String>{
-        HttpHeaders.authorizationHeader: 'Bearer $token',
+        'Authorization': 'Bearer $token',
       },
     );
     return _readUser(data);
@@ -71,7 +68,7 @@ class BackendApiService {
       '/users/$userId',
       payload,
       headers: <String, String>{
-        HttpHeaders.authorizationHeader: 'Bearer $token',
+        'Authorization': 'Bearer $token',
       },
     );
     final user = _readUser(data);
@@ -111,21 +108,43 @@ class BackendApiService {
     Map<String, String>? headers,
   }) async {
     final uri = Uri.parse('${AppConstants.apiBaseUrl}$path');
-    final request = await _client.openUrl(method, uri);
-    request.headers.set(HttpHeaders.acceptHeader, 'application/json');
-    headers?.forEach((key, value) {
-      request.headers.set(key, value);
-    });
-    if (body != null) {
-      request.headers.set(
-        HttpHeaders.contentTypeHeader,
-        'application/json; charset=utf-8',
-      );
-      request.write(jsonEncode(body));
+    late final http.Response response;
+
+    try {
+      switch (method) {
+        case 'GET':
+          response = await http.get(uri, headers: headers);
+          break;
+        case 'POST':
+          response = await http.post(
+            uri,
+            headers: <String, String>{
+              'Accept': 'application/json',
+              'Content-Type': 'application/json; charset=utf-8',
+              ...?headers,
+            },
+            body: jsonEncode(body ?? <String, dynamic>{}),
+          );
+          break;
+        case 'PATCH':
+          response = await http.patch(
+            uri,
+            headers: <String, String>{
+              'Accept': 'application/json',
+              'Content-Type': 'application/json; charset=utf-8',
+              ...?headers,
+            },
+            body: jsonEncode(body ?? <String, dynamic>{}),
+          );
+          break;
+        default:
+          throw const BackendApiException(500, 'Unsupported request method.');
+      }
+    } catch (error) {
+      throw BackendApiException(503, 'Unable to connect to the backend: $error');
     }
 
-    final response = await request.close();
-    final responseText = await utf8.decoder.bind(response).join();
+    final responseText = response.body;
     final decoded = responseText.isEmpty
         ? <String, dynamic>{}
         : jsonDecode(responseText);
