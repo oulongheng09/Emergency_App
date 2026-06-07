@@ -35,7 +35,7 @@ class LoginScreen extends StatelessWidget {
                 children: [
                   const Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Join Sentinel', style: AppTextStyles.title),
+                    child: Text('KHMERSOS', style: AppTextStyles.title),
                   ),
                   const SizedBox(height: 8),
                   const Align(
