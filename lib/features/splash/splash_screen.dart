@@ -1,15 +1,34 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   final VoidCallback onFinish;
 
   const SplashScreen({super.key, required this.onFinish});
 
   @override
-  Widget build(BuildContext context) {
-    Future.delayed(const Duration(seconds: 2), onFinish);
+  State<SplashScreen> createState() => _SplashScreenState();
+}
 
+class _SplashScreenState extends State<SplashScreen> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(const Duration(seconds: 2), widget.onFinish);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: AppColors.primaryRed,
       body: Center(

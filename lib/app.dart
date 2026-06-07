@@ -1,9 +1,12 @@
-import 'package:emergency_front_end/features/personal_contacts/personal_contacts_screen.dart';
 import 'package:flutter/material.dart';
 import 'features/auth/login_screen.dart';
+import 'features/first_aid/first_aid_list_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/map/map_screen.dart';
+import 'features/personal_contacts/personal_contacts_screen.dart';
 import 'features/splash/splash_screen.dart';
+import 'models/backend_session.dart';
+import 'models/backend_user.dart';
 import 'theme/app_colors.dart';
 
 class EmergencyApp extends StatefulWidget {
@@ -16,6 +19,23 @@ class EmergencyApp extends StatefulWidget {
 class _EmergencyAppState extends State<EmergencyApp> {
   int _screen = 0;
   int _tab = 0;
+  BackendSession? _session;
+
+  void _handleAuthenticated(BackendSession session) {
+    setState(() {
+      _session = session;
+      _screen = 2;
+      _tab = 0;
+    });
+  }
+
+  void _handleUserUpdated(BackendUser user) {
+    setState(() {
+      if (_session != null) {
+        _session = _session!.copyWith(user: user);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,15 +50,26 @@ class _EmergencyAppState extends State<EmergencyApp> {
       home: _screen == 0
           ? SplashScreen(onFinish: () => setState(() => _screen = 1))
           : _screen == 1
-          ? LoginScreen(onLogin: () => setState(() => _screen = 2))
+          ? LoginScreen(onAuthenticated: _handleAuthenticated)
           : Scaffold(
               body: IndexedStack(
                 index: _tab,
-                children: const [
-                  HomeScreen(),
-                  MapScreen(),
-                  Center(child: Text('First Aid')),
-                  PersonalContactsScreen(),
+                children: [
+                  HomeScreen(
+                    user: _session?.user,
+                    token: _session?.token,
+                    onUserUpdated: _handleUserUpdated,
+                    onLogout: () {
+                      setState(() {
+                        _session = null;
+                        _screen = 1; // show login
+                        _tab = 0;
+                      });
+                    },
+                  ),
+                  const MapScreen(),
+                  const FirstAidListScreen(),
+                  const PersonalContactsScreen(),
                 ],
               ),
               bottomNavigationBar: BottomNavigationBar(
