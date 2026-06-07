@@ -1,10 +1,155 @@
 import 'package:flutter/material.dart';
+import '../../core/services/backend_api_service.dart';
+import '../../models/backend_user.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/primary_button.dart';
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+class ProfileScreen extends StatefulWidget {
+  final BackendUser? user;
+  final String? token;
+  final ValueChanged<BackendUser>? onSaved;
+
+  const ProfileScreen({super.key, this.user, this.token, this.onSaved});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _fullNameController = TextEditingController();
+  final _phoneNumberController = TextEditingController();
+  final _locationController = TextEditingController();
+  final _bloodGroupController = TextEditingController();
+  final _allergiesController = TextEditingController();
+  final _medicalNotesController = TextEditingController();
+
+  bool _isLoading = true;
+  bool _isSaving = false;
+  String _selectedLanguage = 'EN';
+  String? _errorMessage;
+  BackendUser? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _applyUser(widget.user);
+    _loadUser();
+  }
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _phoneNumberController.dispose();
+    _locationController.dispose();
+    _bloodGroupController.dispose();
+    _allergiesController.dispose();
+    _medicalNotesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUser() async {
+    if (widget.token == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final remoteUser = await BackendApiService.instance.fetchCurrentUser(
+        widget.token!,
+      );
+      if (remoteUser != null) {
+        _applyUser(remoteUser);
+      }
+    } catch (error) {
+      _errorMessage = error.toString();
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _applyUser(BackendUser? user) {
+    if (user == null) {
+      return;
+    }
+    _currentUser = user;
+    _fullNameController.text = user.fullName;
+    _phoneNumberController.text = user.phoneNumber ?? '';
+    _locationController.text = user.location ?? user.address ?? '';
+    _bloodGroupController.text = user.bloodGroup ?? '';
+    _allergiesController.text = user.allergies ?? '';
+    _medicalNotesController.text = user.urgentMedicalNotes ?? '';
+  }
+
+  Future<void> _saveProfile() async {
+    final currentUser = _currentUser ?? widget.user;
+    final token = widget.token;
+
+    if (currentUser == null || token == null) {
+      _showMessage('No authenticated user is available.');
+      return;
+    }
+
+    final fullName = _fullNameController.text.trim();
+    if (fullName.isEmpty) {
+      _showMessage('Full name is required.');
+      return;
+    }
+
+    final payload = <String, dynamic>{
+      'full_name': fullName,
+      'blood_group': _bloodGroupController.text.trim().isEmpty
+          ? null
+          : _bloodGroupController.text.trim(),
+      'allergies': _allergiesController.text.trim().isEmpty
+          ? null
+          : _allergiesController.text.trim(),
+      'location': _locationController.text.trim().isEmpty
+          ? null
+          : _locationController.text.trim(),
+      'urgent_medical_notes': _medicalNotesController.text.trim().isEmpty
+          ? null
+          : _medicalNotesController.text.trim(),
+    };
+
+    final phoneDigits = _phoneNumberController.text.replaceAll(
+      RegExp(r'[^0-9]'),
+      '',
+    );
+    if (phoneDigits.isNotEmpty) {
+      payload['phone_number'] = int.parse(phoneDigits);
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final updatedUser = await BackendApiService.instance.updateUser(
+        token: token,
+        userId: currentUser.id,
+        payload: payload,
+      );
+      _applyUser(updatedUser);
+      widget.onSaved?.call(updatedUser);
+      _showMessage('Profile saved successfully.');
+    } catch (error) {
+      _showMessage(error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,139 +160,136 @@ class ProfileScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Profile'),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _ProfileHeader(),
-              const SizedBox(height: 16),
-              const Text('SETTINGS', style: AppTextStyles.sectionTitle),
-              const SizedBox(height: 7),
-              _SectionCard(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Language', style: AppTextStyles.label),
-                    const SizedBox(height: 9),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 34,
-                            alignment: Alignment.center,
-                            decoration: const BoxDecoration(
-                              color: AppColors.primaryRed,
-                              borderRadius: BorderRadius.horizontal(
-                                left: Radius.circular(7),
+                    const _ProfileHeader(),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    const Text('SETTINGS', style: AppTextStyles.sectionTitle),
+                    const SizedBox(height: 7),
+                    _SectionCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Language', style: AppTextStyles.label),
+                          const SizedBox(height: 9),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _LanguagePill(
+                                  label: 'EN',
+                                  selected: _selectedLanguage == 'EN',
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedLanguage = 'EN';
+                                    });
+                                  },
+                                ),
                               ),
-                            ),
-                            child: const Text(
-                              'EN',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 11,
+                              Expanded(
+                                child: _LanguagePill(
+                                  label: 'KH',
+                                  selected: _selectedLanguage == 'KH',
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedLanguage = 'KH';
+                                    });
+                                  },
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            height: 34,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEFEFEF),
-                              border: Border.all(color: AppColors.border),
-                              borderRadius: const BorderRadius.horizontal(
-                                right: Radius.circular(7),
-                              ),
-                            ),
-                            child: const Text(
-                              'KH',
-                              style: TextStyle(
-                                color: AppColors.textDark,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 9),
-              const _SectionCard(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Appearance\nLight Mode',
-                        style: AppTextStyles.label,
+                        ],
                       ),
                     ),
-                    _MockSwitch(),
+                    const SizedBox(height: 9),
+                    _SectionCard(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Appearance\nLight Mode',
+                              style: AppTextStyles.label,
+                            ),
+                          ),
+                          const _MockSwitch(),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _SectionCard(
+                      title: 'PROFILE INFORMATION',
+                      icon: Icons.person_outline,
+                      child: Column(
+                        children: [
+                          _EditableField(
+                            controller: _fullNameController,
+                            label: 'Full Name',
+                          ),
+                          const SizedBox(height: 12),
+                          _EditableField(
+                            controller: _phoneNumberController,
+                            label: 'Phone Number',
+                            keyboardType: TextInputType.phone,
+                          ),
+                          const SizedBox(height: 12),
+                          _EditableField(
+                            controller: _locationController,
+                            label: 'Location',
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _SectionCard(
+                      title: 'MEDICAL PROFILE',
+                      icon: Icons.medical_services_outlined,
+                      child: Column(
+                        children: [
+                          _EditableField(
+                            controller: _bloodGroupController,
+                            label: 'Blood Group',
+                          ),
+                          const SizedBox(height: 12),
+                          _EditableField(
+                            controller: _allergiesController,
+                            label: 'Known Allergies',
+                          ),
+                          const SizedBox(height: 12),
+                          _EditableField(
+                            controller: _medicalNotesController,
+                            label: 'Urgent Medical Notes',
+                            maxLines: 3,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    PrimaryButton(
+                      text: _isSaving ? 'SAVING...' : 'SAVE PROFILE',
+                      onPressed: _isSaving ? null : _saveProfile,
+                    ),
+                    const SizedBox(height: 12),
+                    const Center(),
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
-              _SectionCard(
-                title: 'PROFILE INFORMATION',
-                icon: Icons.person_outline,
-                child: const Column(
-                  children: [
-                    _MockField(label: 'Full Name', value: 'John Doe'),
-                    SizedBox(height: 12),
-                    _MockField(label: 'Phone Number', value: '+855 12 345 678'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              _SectionCard(
-                title: 'MEDICAL PROFILE',
-                icon: Icons.medical_services_outlined,
-                child: const Column(
-                  children: [
-                    _MockField(
-                      label: 'Blood Group',
-                      value: 'Unknown',
-                      suffixIcon: Icons.keyboard_arrow_down,
-                    ),
-                    SizedBox(height: 12),
-                    _MockField(
-                      label: 'Known Allergies',
-                      value: 'e.g. Penicillin, Peanuts',
-                    ),
-                    SizedBox(height: 12),
-                    _MockLargeField(
-                      label: 'Urgent Medical Notes',
-                      value: 'Chronic conditions, current medications...',
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              PrimaryButton(text: 'SAVE PROFILE', onPressed: () {}),
-              const SizedBox(height: 12),
-              const Center(
-                child: Text(
-                  'Information is stored locally for emergency first responders.',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.small,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -208,12 +350,18 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-class _MockField extends StatelessWidget {
+class _EditableField extends StatelessWidget {
+  final TextEditingController controller;
   final String label;
-  final String value;
-  final IconData? suffixIcon;
+  final int? maxLines;
+  final TextInputType keyboardType;
 
-  const _MockField({required this.label, required this.value, this.suffixIcon});
+  const _EditableField({
+    required this.controller,
+    required this.label,
+    this.maxLines,
+    this.keyboardType = TextInputType.text,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -222,20 +370,26 @@ class _MockField extends StatelessWidget {
       children: [
         Text(label, style: AppTextStyles.label),
         const SizedBox(height: 5),
-        Container(
-          height: 37,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              Expanded(child: Text(value, style: AppTextStyles.body)),
-              if (suffixIcon != null)
-                Icon(suffixIcon, size: 17, color: AppColors.textGrey),
-            ],
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: AppColors.card,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: const BorderSide(color: AppColors.primaryRed),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 10,
+            ),
           ),
         ),
       ],
@@ -243,31 +397,41 @@ class _MockField extends StatelessWidget {
   }
 }
 
-class _MockLargeField extends StatelessWidget {
+class _LanguagePill extends StatelessWidget {
   final String label;
-  final String value;
+  final bool selected;
+  final VoidCallback onTap;
 
-  const _MockLargeField({required this.label, required this.value});
+  const _LanguagePill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTextStyles.label),
-        const SizedBox(height: 5),
-        Container(
-          height: 92,
-          width: double.infinity,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: AppColors.border),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primaryRed : const Color(0xFFEFEFEF),
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.horizontal(
+            left: label == 'EN' ? const Radius.circular(7) : Radius.zero,
+            right: label == 'KH' ? const Radius.circular(7) : Radius.zero,
           ),
-          child: Text(value, style: AppTextStyles.body),
         ),
-      ],
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : AppColors.textDark,
+            fontWeight: FontWeight.w800,
+            fontSize: 11,
+          ),
+        ),
+      ),
     );
   }
 }
