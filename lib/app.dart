@@ -59,6 +59,13 @@ class _EmergencyAppState extends State<EmergencyApp> {
                     user: _session?.user,
                     token: _session?.token,
                     onUserUpdated: _handleUserUpdated,
+                    onLogout: () {
+                      setState(() {
+                        _session = null;
+                        _screen = 1; // show login
+                        _tab = 0;
+                      });
+                    },
                   ),
                   const MapScreen(),
                   const FirstAidListScreen(),

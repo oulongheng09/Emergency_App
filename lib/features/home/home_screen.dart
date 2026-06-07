@@ -14,8 +14,15 @@ class HomeScreen extends StatelessWidget {
   final BackendUser? user;
   final String? token;
   final ValueChanged<BackendUser>? onUserUpdated;
+  final VoidCallback? onLogout;
 
-  const HomeScreen({super.key, this.user, this.token, this.onUserUpdated});
+  const HomeScreen({
+    super.key,
+    this.user,
+    this.token,
+    this.onUserUpdated,
+    this.onLogout,
+  });
 
   static const services = [
     EmergencyServiceKind.police,
@@ -37,6 +44,7 @@ class HomeScreen extends StatelessWidget {
                 user: user,
                 token: token,
                 onUserUpdated: onUserUpdated,
+                onLogout: onLogout,
               ),
               const SizedBox(height: 58),
               EmergencySosButton(
@@ -89,8 +97,13 @@ class _LocationHeader extends StatelessWidget {
   final BackendUser? user;
   final String? token;
   final ValueChanged<BackendUser>? onUserUpdated;
-
-  const _LocationHeader({this.user, this.token, this.onUserUpdated});
+  final VoidCallback? onLogout;
+  const _LocationHeader({
+    this.user,
+    this.token,
+    this.onUserUpdated,
+    this.onLogout,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +150,7 @@ class _LocationHeader extends StatelessWidget {
                   user: user,
                   token: token,
                   onSaved: onUserUpdated,
+                  onLogout: onLogout,
                 ),
               ),
             );

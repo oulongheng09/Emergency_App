@@ -9,8 +9,15 @@ class ProfileScreen extends StatefulWidget {
   final BackendUser? user;
   final String? token;
   final ValueChanged<BackendUser>? onSaved;
+  final VoidCallback? onLogout;
 
-  const ProfileScreen({super.key, this.user, this.token, this.onSaved});
+  const ProfileScreen({
+    super.key,
+    this.user,
+    this.token,
+    this.onSaved,
+    this.onLogout,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -63,6 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (error) {
       _errorMessage = error.toString();
+      _showMessage(_errorMessage ?? 'Failed to load user.', error: true);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -134,7 +142,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       widget.onSaved?.call(updatedUser);
       _showMessage('Profile saved successfully.');
     } catch (error) {
-      _showMessage(error.toString());
+      _showMessage(error.toString(), error: true);
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -142,13 +150,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _showMessage(String message) {
-    if (!mounted) {
-      return;
+  void _showMessage(String message, {bool error = false}) {
+    if (!mounted) return;
+    final snack = SnackBar(
+      content: Text(message),
+      backgroundColor: error ? Colors.red.shade700 : AppColors.primaryRed,
+      action: SnackBarAction(
+        label: 'Dismiss',
+        textColor: Colors.white,
+        onPressed: () {},
+      ),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snack);
+  }
+
+  Future<void> _confirmLogout() async {
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm logout'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      widget.onLogout?.call();
+      if (mounted) {
+        _showMessage('Logged out.');
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
     }
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -286,7 +328,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onPressed: _isSaving ? null : _saveProfile,
                     ),
                     const SizedBox(height: 12),
-                    const Center(),
+                    PrimaryButton(
+                      text: 'LOGOUT',
+                      icon: Icons.logout,
+                      onPressed: _confirmLogout,
+                    ),
                   ],
                 ),
               ),
