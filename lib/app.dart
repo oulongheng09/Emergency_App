@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'features/auth/login_screen.dart';
+import 'features/first_aid/first_aid_list_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/map/map_screen.dart';
 import 'features/personal_contacts/personal_contacts_screen.dart';
@@ -60,7 +61,7 @@ class _EmergencyAppState extends State<EmergencyApp> {
                     onUserUpdated: _handleUserUpdated,
                   ),
                   const MapScreen(),
-                  Center(child: Text('First Aid')),
+                  const FirstAidListScreen(),
                   const PersonalContactsScreen(),
                 ],
               ),
