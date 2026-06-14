@@ -2,11 +2,13 @@ import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class ServiceScreenShell extends StatelessWidget {
+  final VoidCallback? onSettingsTap;
   const ServiceScreenShell({
     super.key,
     required this.title,
     required this.child,
     this.actions = const <Widget>[],
+    this.onSettingsTap,
   });
 
   final String title;
@@ -46,7 +48,7 @@ class ServiceScreenShell extends StatelessWidget {
                   ...actions,
                   if (actions.isEmpty)
                     IconButton(
-                      onPressed: () {},
+                      onPressed: onSettingsTap,
                       icon: const Icon(
                         Icons.settings_outlined,
                         size: 18,

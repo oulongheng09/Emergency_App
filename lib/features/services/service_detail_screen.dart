@@ -3,18 +3,43 @@ import 'package:emergency_front_end/models/service_location.dart';
 import 'package:emergency_front_end/widgets/service_action_button.dart';
 import 'package:emergency_front_end/widgets/service_detail_section.dart';
 import 'package:emergency_front_end/widgets/service_screen_shell.dart';
+import 'package:emergency_front_end/models/backend_user.dart';
+import 'package:emergency_front_end/features/profile/profile_screen.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class ServiceDetailScreen extends StatelessWidget {
-  const ServiceDetailScreen({super.key, required this.location});
+  const ServiceDetailScreen({
+    super.key,
+    required this.location,
+    this.user,
+    this.token,
+    this.onUserUpdated,
+    this.onLogout,
+  });
 
   final ServiceLocation location;
+  final BackendUser? user;
+  final String? token;
+  final ValueChanged<BackendUser>? onUserUpdated;
+  final VoidCallback? onLogout;
 
   @override
   Widget build(BuildContext context) {
     return ServiceScreenShell(
       title: '${location.kind.navigationTitle} Details',
+      onSettingsTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ProfileScreen(
+              user: user,
+              token: token,
+              onSaved: onUserUpdated,
+              onLogout: onLogout,
+            ),
+          ),
+        );
+      },
       child: ListView(
         padding: const EdgeInsets.fromLTRB(8, 2, 8, 20),
         children: [

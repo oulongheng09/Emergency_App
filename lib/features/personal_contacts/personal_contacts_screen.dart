@@ -4,7 +4,7 @@ import 'package:emergency_front_end/theme/app_colors.dart';
 import '../profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 import '../../models/backend_user.dart';
-import '../../services/emergency_contact_service.dart';
+import 'package:emergency_front_end/core/services/emergency_contact_service.dart';
 
 class PersonalContactsScreen extends StatefulWidget {
   final BackendUser? user;
