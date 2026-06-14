@@ -1,23 +1,35 @@
+import 'package:emergency_front_end/models/first_aid_tip_model.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/primary_button.dart';
+import 'package:emergency_front_end/features/profile/profile_screen.dart';
+import 'package:emergency_front_end/models/backend_user.dart';
 
 class FirstAidDetailScreen extends StatelessWidget {
   final String title;
   final String subtitle;
-  final List<String> steps;
+  final List<FirstAidTip> tips;
   final IconData heroIcon;
   final String emergencyCallLabel;
+
+  final BackendUser? user;
+  final String? token;
+  final ValueChanged<BackendUser>? onUserUpdated;
+  final VoidCallback? onLogout;
 
   const FirstAidDetailScreen({
     super.key,
     required this.title,
     required this.subtitle,
-    required this.steps,
+    required this.tips,
     this.heroIcon = Icons.medical_services,
     this.emergencyCallLabel = 'EMERGENCY CALL: 119',
+    this.user,
+    this.token,
+    this.onUserUpdated,
+    this.onLogout, required List<String> steps,
   });
 
   @override
@@ -32,7 +44,18 @@ class FirstAidDetailScreen extends StatelessWidget {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ProfileScreen(
+                    user: user,
+                    token: token,
+                    onSaved: onUserUpdated,
+                    onLogout: onLogout,
+                  ),
+                ),
+              );
+            },
             icon: const Icon(Icons.settings_outlined),
           ),
         ],
@@ -60,15 +83,14 @@ class FirstAidDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  for (var i = 0; i < steps.length; i++) ...[
+                  for (var i = 0; i < tips.length; i++) ...[
                     _InstructionStepCard(
                       number: i + 1,
-                      title: _stepTitle(i),
-                      description: steps[i],
+                      title: tips[i].title,
+                      description: tips[i].content,
                       icon: _stepIcon(i),
                     ),
-                    if (i != steps.length - 1) const SizedBox(height: 18),
-                  ],
+                  ]
                 ],
               ),
             ),
@@ -84,21 +106,6 @@ class FirstAidDetailScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _stepTitle(int index) {
-    final titles = <String>[
-      'Check Scene Safety',
-      'Check Responsiveness',
-      'Call Emergency Services',
-      'Start Compressions',
-      'Rescue Breaths',
-    ];
-
-    if (index < titles.length) {
-      return titles[index];
-    }
-    return 'Step ${index + 1}';
   }
 
   IconData _stepIcon(int index) {

@@ -1,3 +1,5 @@
+import 'package:emergency_front_end/models/backend_user.dart';
+import 'package:emergency_front_end/models/first_aid_tip_model.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -8,9 +10,16 @@ import '../../widgets/app_section_title.dart';
 import '../../widgets/first_aid_card.dart';
 import '../../widgets/primary_button.dart';
 import 'first_aid_detail_screen.dart';
+import '../profile/profile_screen.dart';
+import '../../core/services/backend_api_service.dart';
+import '../../models/first_aid_category.dart';
 
-const _defaultTrainingVideoUrl =
-    'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4';
+
+const _VidCPR = 'videos/cpr.mp4';
+const _VidBurns = 'videos/burn.mp4';
+const _VidBleeding = 'videos/bleeding.mp4';
+const _VidChoking = 'videos/chocking.mp4';
+const _VidSnakeBite = 'videos/snake bite.mp4';
 
 class _TrainingItem {
   final String title;
@@ -28,32 +37,101 @@ const _trainingItems = <_TrainingItem>[
   _TrainingItem(
     title: 'CPR',
     subtitle: 'Cardiopulmonary Resuscitation',
-    videoUrl: _defaultTrainingVideoUrl,
+    videoUrl: _VidCPR,
   ),
   _TrainingItem(
     title: 'Burns',
     subtitle: 'Cool, cover, and protect',
-    videoUrl: _defaultTrainingVideoUrl,
+    videoUrl: _VidBurns,
   ),
   _TrainingItem(
     title: 'Bleeding',
     subtitle: 'Pressure first',
-    videoUrl: _defaultTrainingVideoUrl,
+    videoUrl: _VidBleeding,
   ),
   _TrainingItem(
     title: 'Choking',
     subtitle: 'Clear the airway',
-    videoUrl: _defaultTrainingVideoUrl,
+    videoUrl: _VidChoking,
   ),
   _TrainingItem(
     title: 'Snake Bite',
     subtitle: 'Immobilize and get help',
-    videoUrl: _defaultTrainingVideoUrl,
+    videoUrl: _VidSnakeBite,
   ),
 ];
 
-class FirstAidListScreen extends StatelessWidget {
-  const FirstAidListScreen({super.key});
+class FirstAidListScreen extends StatefulWidget {
+  final BackendUser? user;
+  final String? token;
+  final ValueChanged<BackendUser>? onUserUpdated;
+  final VoidCallback? onLogout;
+
+  const FirstAidListScreen({
+    super.key,
+    this.user,
+    this.token,
+    this.onUserUpdated,
+    this.onLogout,
+  });
+
+  @override
+  State<FirstAidListScreen> createState() => _FirstAidListScreenState();
+}
+
+class _FirstAidListScreenState extends State<FirstAidListScreen> {
+
+  late Future<List<FirstAidCategory>> _categoriesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _categoriesFuture = BackendApiService.instance.fetchFirstAidCategories();
+  }
+
+IconData _getCategoryIcon(String name) {
+  switch (name.toLowerCase()) {
+    case 'bleeding':
+      return Icons.bloodtype;
+
+    case 'burns':
+      return Icons.local_fire_department;
+
+    case 'choking':
+      return Icons.air;
+
+    case 'cpr':
+      return Icons.monitor_heart;
+
+    case 'snake bite':
+      return Icons.crisis_alert;
+
+    default:
+      return Icons.medical_services;
+  }
+}
+
+Color _getCategoryColor(String name) {
+  switch (name.toLowerCase()) {
+    case 'bleeding':
+      return const Color(0xFFE53935);
+
+    case 'burns':
+      return const Color(0xFFFF6F00);
+
+    case 'choking':
+      return const Color(0xFF29B6F6);
+
+    case 'cpr':
+      return const Color(0xFFD81B60);
+
+    case 'snake bite':
+      return const Color(0xFF43A047);
+
+    default:
+      return AppColors.primaryRed;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +143,20 @@ class FirstAidListScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _HeaderBar(onSettingsTap: () {}),
+              _HeaderBar(
+                onSettingsTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ProfileScreen(
+                        user: widget.user,
+                        token: widget.token,
+                        onSaved: widget.onUserUpdated,
+                        onLogout: widget.onLogout,
+                      ),
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 28),
               const AppSectionTitle(
                 title: 'First-Aid Guide',
@@ -73,132 +164,103 @@ class FirstAidListScreen extends StatelessWidget {
                     'Instant protocols for critical emergencies. Tap any category for immediate instructions.',
               ),
               const SizedBox(height: 22),
-              SizedBox(
-                width: double.infinity,
-                child: FirstAidCard(
-                  title: 'CPR',
-                  subtitle: 'Cardiopulmonary Resuscitation',
-                  icon: Icons.favorite,
-                  height: 158,
-                  radius: 18,
-                  iconSize: 42,
-                  backgroundColor: AppColors.primaryRed,
-                  foregroundColor: Colors.white,
-                  borderColor: const Color(0xFF5D0A16),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const FirstAidDetailScreen(
-                          title: 'CPR',
-                          subtitle: 'Cardiopulmonary Resuscitation',
-                          heroIcon: Icons.favorite,
-                          emergencyCallLabel: 'EMERGENCY CALL: 119',
-                          steps: [
-                            'Ensure the environment is safe for you and the victim before approaching.',
-                            'Tap the shoulders and shout "Are you okay?". Check for normal breathing.',
-                            'If unresponsive, immediately call for help or tell someone to do it.',
-                            'Push hard and fast in the center of the chest. Aim for 100-120 beats per minute.',
-                            'Tilt head, lift chin, and give two breaths after 30 compressions. (Only if trained).',
-                          ],
-                        ),
+              FutureBuilder<List<FirstAidCategory>>(
+                future: _categoriesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        snapshot.error.toString(),
                       ),
                     );
-                  },
-                ),
+                  }
+
+                  final categories = snapshot.data ?? [];
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics:
+                        const NeverScrollableScrollPhysics(),
+                    itemCount: categories.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.1,
+                    ),
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+
+                      final color = _getCategoryColor(category.name);
+
+                      return FirstAidCard(
+                        title: category.name,
+                        icon: _getCategoryIcon(category.name),
+                        foregroundColor: color,
+                        borderColor: color.withValues(alpha: 0.15),
+                        onTap: () async {
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+
+                          try {
+                            final data = await BackendApiService.instance
+                                .fetchFirstAidCategory(category.id);
+
+                            if (!context.mounted) return;
+
+                            Navigator.pop(context); // close loading
+
+                            final tips = (data['tips'] as List)
+                                .map((e) => FirstAidTip.fromJson(e))
+                                .toList();
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => FirstAidDetailScreen(
+                                  title: category.name,
+                                  subtitle: 'Emergency First Aid',
+                                  tips: tips,
+                                  heroIcon: _getCategoryIcon(category.name),
+                                  user: widget.user,
+                                  token: widget.token,
+                                  onUserUpdated: widget.onUserUpdated,
+                                  onLogout: widget.onLogout, steps: [],
+                                ),
+                              ),
+                            );
+                          } catch (e) {
+                            if (!context.mounted) return;
+
+                            Navigator.pop(context);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(e.toString()),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                      );
+                    },
+                  );
+                },
               ),
               const SizedBox(height: 22),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                childAspectRatio: 1.1,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                children: [
-                  FirstAidCard(
-                    title: 'Burns',
-                    icon: Icons.local_fire_department_outlined,
-                    iconSize: 26,
-                    height: 120,
-                    foregroundColor: const Color(0xFFAA5A00),
-                    backgroundColor: const Color(0xFFF4EEE8),
-                    borderColor: const Color(0xFFD5C2B1),
-                    onTap: () => _openDetail(
-                      context,
-                      title: 'Burns',
-                      subtitle: 'Cool, cover, and protect',
-                      steps: const [
-                        'Cool the burn under cool running water.',
-                        'Remove tight items before swelling starts.',
-                        'Cover with a clean, non-stick dressing.',
-                        'Do not apply ice or ointments directly.',
-                      ],
-                    ),
-                  ),
-                  FirstAidCard(
-                    title: 'Bleeding',
-                    icon: Icons.medical_services_outlined,
-                    iconSize: 26,
-                    height: 120,
-                    foregroundColor: const Color(0xFFC8102E),
-                    backgroundColor: const Color(0xFFF6ECEC),
-                    borderColor: const Color(0xFFDDB7B7),
-                    onTap: () => _openDetail(
-                      context,
-                      title: 'Bleeding',
-                      subtitle: 'Pressure first',
-                      steps: const [
-                        'Apply direct pressure with a clean cloth.',
-                        'Raise the injured area if possible.',
-                        'Do not remove soaked cloth; add layers on top.',
-                        'Seek urgent help if bleeding is severe.',
-                      ],
-                    ),
-                  ),
-                  FirstAidCard(
-                    title: 'Snake Bite',
-                    icon: Icons.warning_amber_outlined,
-                    iconSize: 26,
-                    height: 120,
-                    foregroundColor: const Color(0xFF6C6C6C),
-                    backgroundColor: const Color(0xFFF2F1F1),
-                    borderColor: const Color(0xFFD4D4D4),
-                    onTap: () => _openDetail(
-                      context,
-                      title: 'Snake Bite',
-                      subtitle: 'Keep calm, immobilize, and get help',
-                      steps: const [
-                        'Keep the person calm and still.',
-                        'Remove rings or tight clothing.',
-                        'Immobilize the bitten area.',
-                        'Get emergency help immediately.',
-                      ],
-                    ),
-                  ),
-                  FirstAidCard(
-                    title: 'Choking',
-                    icon: Icons.air,
-                    iconSize: 26,
-                    height: 120,
-                    foregroundColor: const Color(0xFF0057B8),
-                    backgroundColor: const Color(0xFFF0F5FB),
-                    borderColor: const Color(0xFFC4D7EC),
-                    onTap: () => _openDetail(
-                      context,
-                      title: 'Choking',
-                      subtitle: 'Clear the airway',
-                      steps: const [
-                        'Ask if the person can speak or cough.',
-                        'Give back blows if needed.',
-                        'Perform abdominal thrusts if trained.',
-                        'Call emergency services right away.',
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
               _TrainingBanner(
                 onTap: () {
                   Navigator.push(
@@ -276,6 +338,10 @@ class FirstAidListScreen extends StatelessWidget {
           title: title,
           subtitle: subtitle,
           steps: steps,
+          user: widget.user,
+          token: widget.token,
+          onUserUpdated: widget.onUserUpdated,
+          onLogout: widget.onLogout, tips: [],
         ),
       ),
     );
@@ -320,7 +386,10 @@ class _TrainingBanner extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF3A3A3A), Color(0xFF121212)],
+            colors: [
+              Color(0xFFFF4D4D),
+              Color(0xFFD50032),
+            ],
           ),
           boxShadow: [
             BoxShadow(
@@ -493,9 +562,18 @@ class _TrainingVideoDialogState extends State<_TrainingVideoDialog> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.network(widget.item.videoUrl);
-    _initializeFuture = _controller.initialize().then((_) => setState(() {}));
-    _controller.setLooping(true);
+  _controller = VideoPlayerController.asset(
+    widget.item.videoUrl,
+  );
+    _initializeFuture = _controller.initialize().then((_) {
+      _controller
+        ..setLooping(true)
+        ..play();
+
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 
   @override
@@ -582,25 +660,43 @@ class _TrainingVideoDialogState extends State<_TrainingVideoDialog> {
 
                   return Container(
                     height: 220,
-                    color: AppColors.card,
-                    child: const Center(child: CircularProgressIndicator()),
+                    decoration: BoxDecoration(
+                      color: AppColors.card,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 12),
+                          Text('Loading training video...'),
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),
             ),
             const SizedBox(height: 16),
             PrimaryButton(
-              text: _controller.value.isPlaying ? 'Pause' : 'Play',
+              text: !_controller.value.isInitialized
+                  ? 'Loading...'
+                  : _controller.value.isPlaying
+                  ? 'Pause'
+                  : 'Play',
               icon: _controller.value.isPlaying
                   ? Icons.pause
                   : Icons.play_arrow,
-              onPressed: () {
-                setState(() {
-                  _controller.value.isPlaying
-                      ? _controller.pause()
-                      : _controller.play();
-                });
-              },
+              onPressed: !_controller.value.isInitialized
+                  ? null
+                  : () {
+                      setState(() {
+                        _controller.value.isPlaying
+                            ? _controller.pause()
+                            : _controller.play();
+                      });
+                    },
             ),
           ],
         ),

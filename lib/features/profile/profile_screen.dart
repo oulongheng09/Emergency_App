@@ -5,6 +5,9 @@ import '../../state/app_settings_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/primary_button.dart';
+import '../../widgets/custom_error_dialog.dart';
+import '../../widgets/custom_success_dialog.dart';
+import '../../widgets/loading_dialog.dart';
 
 class ProfileScreen extends StatefulWidget {
   final BackendUser? user;
@@ -69,10 +72,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (remoteUser != null) {
         _applyUser(remoteUser);
       }
-    } catch (error) {
-      _errorMessage = error.toString();
-      _showMessage(_errorMessage ?? 'Failed to load user.', error: true);
-    } finally {
+      } catch (error) {
+        _errorMessage = error.toString();
+
+        if (mounted) {
+          await CustomErrorDialog.show(
+            context,
+            title: 'Loading Failed',
+            message: 'Unable to load your profile information.',
+          );
+        }
+      }finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -97,13 +107,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final token = widget.token;
 
     if (currentUser == null || token == null) {
-      _showMessage('No authenticated user is available.');
+      await CustomErrorDialog.show(
+        context,
+        title: 'Authentication Error',
+        message: 'No authenticated user is available.',
+      );
       return;
     }
 
     final fullName = _fullNameController.text.trim();
     if (fullName.isEmpty) {
-      _showMessage('Full name is required.');
+      await CustomErrorDialog.show(
+        context,
+        title: 'Validation Error',
+        message: 'Full Name cannot be empty.',
+      );
       return;
     }
 
@@ -132,6 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     setState(() => _isSaving = true);
+    LoadingDialog.show(context);
 
     try {
       final updatedUser = await BackendApiService.instance.updateUser(
@@ -141,28 +160,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
       _applyUser(updatedUser);
       widget.onSaved?.call(updatedUser);
-      _showMessage('Profile saved successfully.');
+      if (mounted) {
+        LoadingDialog.hide(context);
+
+        await CustomSuccessDialog.show(
+          context,
+          title: 'Profile Updated',
+          message: 'Your profile has been saved successfully.',
+        );
+      }
     } catch (error) {
-      _showMessage(error.toString(), error: true);
+      if (mounted) {
+        LoadingDialog.hide(context);
+
+        await CustomErrorDialog.show(
+          context,
+          title: 'Update Failed',
+          message: 'Unable to save your profile information.',
+        );
+      }
     } finally {
       if (mounted) {
+        if (Navigator.of(context, rootNavigator: true).canPop()) {
+          LoadingDialog.hide(context);
+        }
+
         setState(() => _isSaving = false);
       }
     }
-  }
-
-  void _showMessage(String message, {bool error = false}) {
-    if (!mounted) return;
-    final snack = SnackBar(
-      content: Text(message),
-      backgroundColor: error ? Colors.red.shade700 : AppColors.primaryRed,
-      action: SnackBarAction(
-        label: 'Dismiss',
-        textColor: Colors.white,
-        onPressed: () {},
-      ),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snack);
   }
 
   Future<void> _confirmLogout() async {
@@ -188,7 +213,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (confirmed == true) {
       widget.onLogout?.call();
       if (mounted) {
-        _showMessage('Logged out.');
+        AlertDialog(
+          title: const Text('Logged out.'),
+          content: const Text('You have been successfully logged out.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
     }
@@ -208,11 +242,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Profile'),
+        title: const Text('Settings', style: AppTextStyles.appTitle),
       ),
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+            child: CircularProgressIndicator(
+              color: AppColors.primaryRed,
+            ),
+          )
             : SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
                 child: Column(
@@ -227,7 +265,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    const Text('SETTINGS', style: AppTextStyles.sectionTitle),
                     const SizedBox(height: 7),
                     _SectionCard(
                       child: Column(
@@ -363,7 +400,6 @@ class _ProfileHeader extends StatelessWidget {
         SizedBox(width: 4),
         Text('KhmerSOS', style: AppTextStyles.appTitle),
         Spacer(),
-        Icon(Icons.settings_outlined, size: 18, color: AppColors.primaryRed),
       ],
     );
   }
