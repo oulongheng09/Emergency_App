@@ -2,54 +2,109 @@ import 'package:emergency_front_end/features/personal_contacts/add_edit_contact_
 import 'package:emergency_front_end/models/personal_contact_model.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import '../../models/backend_user.dart';
+import '../../services/emergency_contact_service.dart';
 
 class PersonalContactsScreen extends StatefulWidget {
-  const PersonalContactsScreen({super.key});
+  final BackendUser? user;
+
+  const PersonalContactsScreen({super.key, required this.user});
 
   @override
   State<PersonalContactsScreen> createState() => _PersonalContactsScreenState();
 }
 
 class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
-  final List<PersonalContactModel> _contacts = [
-    const PersonalContactModel(
-      id: 'contact_1',
-      name: 'Sarah Johnson',
-      relationship: 'Sister',
-      phone: '+855 12-384-156',
-      icon: Icons.person_rounded,
-      iconColor: AppColors.policeBlue,
-    ),
-    const PersonalContactModel(
-      id: 'contact_2',
-      name: 'Marcus Reed',
-      relationship: 'Brother',
-      phone: '+855 97-987-843',
-      icon: Icons.favorite_rounded,
-      iconColor: Color(0xFF8B5E2E),
-    ),
-    const PersonalContactModel(
-      id: 'contact_3',
-      name: 'Dr. Helena Smith',
-      relationship: 'Physician',
-      phone: '+855 98-428-101',
-      icon: Icons.medical_services_rounded,
-      iconColor: AppColors.textGrey,
-    ),
-  ];
+  final EmergencyContactService _service = EmergencyContactService();
+
+  List<PersonalContactModel> _contacts = [];
+
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContacts();
+  }
+
+  Future<void> _loadContacts() async {
+    if (widget.user == null) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    if (widget.user!.id.isEmpty) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final data = await _service.getContacts(widget.user!.id);
+
+      setState(() {
+        _contacts = data.map<PersonalContactModel>((e) {
+          return PersonalContactModel(
+            id: e['id'].toString(),
+            name: e['name'] ?? '',
+            relationship: e['relationship'] ?? '',
+            phone: e['phone_number'].toString(),
+            icon: Icons.person_rounded,
+            iconColor: AppColors.policeBlue,
+          );
+        }).toList();
+
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   Future<void> _openAddContact() async {
     final result = await Navigator.of(context).push<PersonalContactModel>(
       MaterialPageRoute(builder: (_) => const AddEditContactScreen()),
     );
 
-    if (result == null) {
+    if (result == null || widget.user == null) {
       return;
     }
 
-    setState(() {
-      _contacts.add(result);
-    });
+    try {
+      await _service.createContact(
+        userId: widget.user!.id,
+        name: result.name,
+        relationship: result.relationship,
+        phone: result.phone.replaceAll(RegExp(r'[^0-9]'), ''),
+      );
+
+      await _loadContacts();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Contact added successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Failed to add contact: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _openEditContact(PersonalContactModel contact) async {
@@ -61,24 +116,96 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
       return;
     }
 
-    final index = _contacts.indexWhere((item) => item.id == contact.id);
-    if (index == -1) {
+    try {
+      await _service.updateContact(
+        id: contact.id,
+        name: result.name,
+        relationship: result.relationship,
+        phone: result.phone.replaceAll(RegExp(r'[^0-9]'), ''),
+      );
+
+      await _loadContacts();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Contact updated successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Failed to update contact: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteContact(PersonalContactModel contact) async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Contact'),
+          content: Text('Are you sure you want to delete ${contact.name}?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
       return;
     }
 
-    setState(() {
-      _contacts[index] = result;
-    });
-  }
+    try {
+      await _service.deleteContact(contact.id);
 
-  void _deleteContact(PersonalContactModel contact) {
-    setState(() {
-      _contacts.removeWhere((item) => item.id == contact.id);
-    });
+      await _loadContacts();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Contact deleted successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Failed to delete contact: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(

@@ -52,9 +52,7 @@ class BackendApiService {
   Future<BackendUser?> fetchCurrentUser(String token) async {
     final data = await _getJson(
       '/auth/me',
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-      },
+      headers: <String, String>{'Authorization': 'Bearer $token'},
     );
     return _readUser(data);
   }
@@ -67,9 +65,7 @@ class BackendApiService {
     final data = await _patchJson(
       '/users/$userId',
       payload,
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-      },
+      headers: <String, String>{'Authorization': 'Bearer $token'},
     );
     final user = _readUser(data);
     if (user == null) {
@@ -141,7 +137,10 @@ class BackendApiService {
           throw const BackendApiException(500, 'Unsupported request method.');
       }
     } catch (error) {
-      throw BackendApiException(503, 'Unable to connect to the backend: $error');
+      throw BackendApiException(
+        503,
+        'Unable to connect to the backend: $error',
+      );
     }
 
     final responseText = response.body;
@@ -185,7 +184,8 @@ class BackendApiService {
 
   BackendUser? _readUser(dynamic json) {
     if (json is Map<String, dynamic>) {
-      return BackendUser.fromJson(json);
+      final user = BackendUser.fromJson(json);
+      return user;
     }
     return null;
   }

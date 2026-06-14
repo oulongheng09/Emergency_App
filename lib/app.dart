@@ -69,7 +69,7 @@ class _EmergencyAppState extends State<EmergencyApp> {
                   ),
                   const MapScreen(),
                   const FirstAidListScreen(),
-                  const PersonalContactsScreen(),
+                  PersonalContactsScreen(user: _session?.user),
                 ],
               ),
               bottomNavigationBar: BottomNavigationBar(
