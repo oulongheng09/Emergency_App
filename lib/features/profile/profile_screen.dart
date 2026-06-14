@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../core/services/backend_api_service.dart';
 import '../../models/backend_user.dart';
+import '../../state/app_settings_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/primary_button.dart';
+import '../../widgets/custom_error_dialog.dart';
+import '../../widgets/custom_success_dialog.dart';
+import '../../widgets/loading_dialog.dart';
 
 class ProfileScreen extends StatefulWidget {
   final BackendUser? user;
@@ -68,10 +72,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (remoteUser != null) {
         _applyUser(remoteUser);
       }
-    } catch (error) {
-      _errorMessage = error.toString();
-      _showMessage(_errorMessage ?? 'Failed to load user.', error: true);
-    } finally {
+      } catch (error) {
+        _errorMessage = error.toString();
+
+        if (mounted) {
+          await CustomErrorDialog.show(
+            context,
+            title: 'Loading Failed',
+            message: 'Unable to load your profile information.',
+          );
+        }
+      }finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -96,13 +107,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final token = widget.token;
 
     if (currentUser == null || token == null) {
-      _showMessage('No authenticated user is available.');
+      await CustomErrorDialog.show(
+        context,
+        title: 'Authentication Error',
+        message: 'No authenticated user is available.',
+      );
       return;
     }
 
     final fullName = _fullNameController.text.trim();
     if (fullName.isEmpty) {
-      _showMessage('Full name is required.');
+      await CustomErrorDialog.show(
+        context,
+        title: 'Validation Error',
+        message: 'Full Name cannot be empty.',
+      );
       return;
     }
 
@@ -131,6 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     setState(() => _isSaving = true);
+    LoadingDialog.show(context);
 
     try {
       final updatedUser = await BackendApiService.instance.updateUser(
@@ -140,28 +160,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
       _applyUser(updatedUser);
       widget.onSaved?.call(updatedUser);
-      _showMessage('Profile saved successfully.');
+      if (mounted) {
+        LoadingDialog.hide(context);
+
+        await CustomSuccessDialog.show(
+          context,
+          title: 'Profile Updated',
+          message: 'Your profile has been saved successfully.',
+        );
+      }
     } catch (error) {
-      _showMessage(error.toString(), error: true);
+      if (mounted) {
+        LoadingDialog.hide(context);
+
+        await CustomErrorDialog.show(
+          context,
+          title: 'Update Failed',
+          message: 'Unable to save your profile information.',
+        );
+      }
     } finally {
       if (mounted) {
+        if (Navigator.of(context, rootNavigator: true).canPop()) {
+          LoadingDialog.hide(context);
+        }
+
         setState(() => _isSaving = false);
       }
     }
-  }
-
-  void _showMessage(String message, {bool error = false}) {
-    if (!mounted) return;
-    final snack = SnackBar(
-      content: Text(message),
-      backgroundColor: error ? Colors.red.shade700 : AppColors.primaryRed,
-      action: SnackBarAction(
-        label: 'Dismiss',
-        textColor: Colors.white,
-        onPressed: () {},
-      ),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snack);
   }
 
   Future<void> _confirmLogout() async {
@@ -187,7 +213,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (confirmed == true) {
       widget.onLogout?.call();
       if (mounted) {
-        _showMessage('Logged out.');
+        AlertDialog(
+          title: const Text('Logged out.'),
+          content: const Text('You have been successfully logged out.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
     }
@@ -195,20 +230,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final settings = AppSettingsScope.of(context);
+    final isDarkMode = settings.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Profile'),
+        title: const Text('Settings', style: AppTextStyles.appTitle),
       ),
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+            child: CircularProgressIndicator(
+              color: AppColors.primaryRed,
+            ),
+          )
             : SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
                 child: Column(
@@ -223,7 +265,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    const Text('SETTINGS', style: AppTextStyles.sectionTitle),
                     const SizedBox(height: 7),
                     _SectionCard(
                       child: Column(
@@ -266,11 +307,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              'Appearance\nLight Mode',
-                              style: AppTextStyles.label,
+                              'Appearance\n${isDarkMode ? 'Dark Mode' : 'Light Mode'}',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: colorScheme.onSurface,
+                              ),
                             ),
                           ),
-                          const _MockSwitch(),
+                          Switch(
+                            value: isDarkMode,
+                            activeThumbColor: colorScheme.primary,
+                            onChanged: settings.setDarkMode,
+                          ),
                         ],
                       ),
                     ),
@@ -352,7 +400,6 @@ class _ProfileHeader extends StatelessWidget {
         SizedBox(width: 4),
         Text('KhmerSOS', style: AppTextStyles.appTitle),
         Spacer(),
-        Icon(Icons.settings_outlined, size: 18, color: AppColors.primaryRed),
       ],
     );
   }
@@ -367,13 +414,18 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.lightRed.withValues(alpha: 0.55),
+        color: isDarkMode
+            ? theme.colorScheme.surface
+            : AppColors.lightRed.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.65)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,22 +463,34 @@ class _EditableField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.label),
+        Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
         const SizedBox(height: 5),
         TextField(
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
+          style: TextStyle(color: theme.colorScheme.onSurface),
           decoration: InputDecoration(
             isDense: true,
             filled: true,
-            fillColor: AppColors.card,
+            fillColor: isDarkMode
+                ? theme.colorScheme.surface.withValues(alpha: 0.78)
+                : AppColors.card,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(4),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: theme.dividerColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(4),
@@ -456,14 +520,21 @@ class _LanguagePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return InkWell(
       onTap: onTap,
       child: Container(
         height: 34,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryRed : const Color(0xFFEFEFEF),
-          border: Border.all(color: AppColors.border),
+          color: selected
+              ? AppColors.primaryRed
+              : isDarkMode
+              ? theme.colorScheme.surface.withValues(alpha: 0.86)
+              : const Color(0xFFEFEFEF),
+          border: Border.all(color: theme.dividerColor),
           borderRadius: BorderRadius.horizontal(
             left: label == 'EN' ? const Radius.circular(7) : Radius.zero,
             right: label == 'KH' ? const Radius.circular(7) : Radius.zero,
@@ -472,37 +543,13 @@ class _LanguagePill extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.white : AppColors.textDark,
+            color: selected
+                ? Colors.white
+                : isDarkMode
+                ? Colors.white70
+                : AppColors.textDark,
             fontWeight: FontWeight.w800,
             fontSize: 11,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MockSwitch extends StatelessWidget {
-  const _MockSwitch();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 45,
-      height: 25,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: AppColors.textDark,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          width: 18,
-          height: 18,
-          decoration: const BoxDecoration(
-            color: AppColors.primaryRed,
-            shape: BoxShape.circle,
           ),
         ),
       ),

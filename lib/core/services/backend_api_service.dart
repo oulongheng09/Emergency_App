@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:emergency_front_end/models/first_aid_category.dart';
 import 'package:http/http.dart' as http;
 import '../../models/backend_session.dart';
 import '../../models/backend_user.dart';
@@ -74,6 +75,40 @@ class BackendApiService {
     return user;
   }
 
+  Future<Map<String, dynamic>> logSosEvent({
+    required String userId,
+    required double latitude,
+    required double longitude,
+  }) async {
+    final nearbyServices = await _requestList(
+      'GET',
+      '/emergency-services/nearby?lat=$latitude&lng=$longitude',
+    );
+
+    if (nearbyServices.isEmpty) {
+      throw const BackendApiException(
+        404,
+        'No nearby emergency services were returned for this SOS event.',
+      );
+    }
+
+    final nearestService = nearbyServices.first;
+    final serviceId = nearestService['id']?.toString() ?? '';
+    if (serviceId.isEmpty) {
+      throw const BackendApiException(
+        500,
+        'Nearby emergency service response is missing an id.',
+      );
+    }
+
+    return _postJson('/sos-logs', <String, dynamic>{
+      'user_id': userId,
+      'service_id': serviceId,
+      'user_latitude': latitude,
+      'user_longitude': longitude,
+    });
+  }
+
   Future<Map<String, dynamic>> _getJson(
     String path, {
     Map<String, String>? headers,
@@ -95,6 +130,63 @@ class BackendApiService {
     Map<String, String>? headers,
   }) async {
     return _request('PATCH', path, body: body, headers: headers);
+  }
+
+  Future<List<dynamic>> _requestList(
+    String method,
+    String path, {
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+  }) async {
+    final uri = Uri.parse('${AppConstants.apiBaseUrl}$path');
+    late final http.Response response;
+
+    try {
+      switch (method) {
+        case 'GET':
+          response = await http.get(uri, headers: headers);
+          break;
+        case 'POST':
+          response = await http.post(
+            uri,
+            headers: <String, String>{
+              'Accept': 'application/json',
+              'Content-Type': 'application/json; charset=utf-8',
+              ...?headers,
+            },
+            body: jsonEncode(body ?? <String, dynamic>{}),
+          );
+          break;
+        default:
+          throw const BackendApiException(500, 'Unsupported request method.');
+      }
+    } catch (error) {
+      throw BackendApiException(
+        503,
+        'Unable to connect to the backend: $error',
+      );
+    }
+
+    final responseText = response.body;
+    final decoded = responseText.isEmpty
+        ? <dynamic>[]
+        : jsonDecode(responseText);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw BackendApiException(
+        response.statusCode,
+        _extractMessage(decoded, responseText),
+      );
+    }
+
+    if (decoded is List<dynamic>) {
+      return decoded;
+    }
+
+    throw const BackendApiException(
+      500,
+      'Expected a list response from the backend.',
+    );
   }
 
   Future<Map<String, dynamic>> _request(
@@ -201,5 +293,33 @@ class BackendApiService {
       }
     }
     return fallback.isEmpty ? 'Request failed.' : fallback;
+  }
+
+  Future<List<FirstAidCategory>> fetchFirstAidCategories() async {
+    final uri = Uri.parse(
+      '${AppConstants.apiBaseUrl}/first-aid-categories',
+    );
+
+    final response = await http.get(uri);
+
+    if (response.statusCode != 200) {
+      throw BackendApiException(
+        response.statusCode,
+        'Unable to load categories',
+      );
+    }
+
+    final List<dynamic> json =
+        jsonDecode(response.body);
+
+    return json
+        .map((e) => FirstAidCategory.fromJson(e))
+        .toList();
+  }
+
+  Future<Map<String, dynamic>> fetchFirstAidCategory(String id) async {
+    return _getJson(
+      '/first-aid-categories/$id',
+    );
   }
 }
