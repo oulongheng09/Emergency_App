@@ -66,7 +66,6 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Fallback to mock data if there's an error
     final items = _error != null ? locationsForKind(widget.kind) : _services;
     final hasError = _error != null;
 

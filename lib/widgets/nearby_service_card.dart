@@ -1,6 +1,7 @@
 import 'package:emergency_front_end/core/utils/launcher_utils.dart';
 import 'package:emergency_front_end/models/service_location.dart';
 import 'package:emergency_front_end/widgets/service_action_button.dart';
+import 'package:emergency_front_end/features/map/map_screen.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -128,8 +129,14 @@ class NearbyServiceCard extends StatelessWidget {
                       label: 'DIRECTIONS',
                       icon: Icons.near_me_outlined,
                       onPressed: () {
-                        LauncherUtils.openGoogleMapSearch(
-                          destination: location.position,
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MapScreen(
+                              destination: location,
+                              showBackButton: true,
+                            ),
+                          ),
                         );
                       },
                     ),

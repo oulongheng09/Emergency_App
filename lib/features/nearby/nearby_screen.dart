@@ -181,7 +181,8 @@ class _NearbyScreenState extends State<NearbyScreen> {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => const _MapScreenWrapper(),
+                            builder: (_) =>
+                                const MapScreen(showBackButton: true),
                           ),
                         );
                       },
@@ -389,50 +390,6 @@ class _InfoCard extends StatelessWidget {
           ],
         ],
       ),
-    );
-  }
-}
-
-class _MapScreenWrapper extends StatelessWidget {
-  const _MapScreenWrapper();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        const MapScreen(),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: SafeArea(
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_rounded, size: 18),
-                    color: AppColors.textDark,
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Emergency Services Map',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

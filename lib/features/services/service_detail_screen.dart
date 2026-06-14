@@ -5,6 +5,7 @@ import 'package:emergency_front_end/widgets/service_detail_section.dart';
 import 'package:emergency_front_end/widgets/service_screen_shell.dart';
 import 'package:emergency_front_end/models/backend_user.dart';
 import 'package:emergency_front_end/features/profile/profile_screen.dart';
+import 'package:emergency_front_end/features/map/map_screen.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -339,8 +340,14 @@ class _DirectionsPreview extends StatelessWidget {
                     label: 'GET DIRECTIONS',
                     icon: Icons.route_outlined,
                     onPressed: () {
-                      LauncherUtils.openGoogleMapSearch(
-                        destination: location.position,
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MapScreen(
+                            destination: location,
+                            showBackButton: true,
+                          ),
+                        ),
                       );
                     },
                   ),
