@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:emergency_front_end/core/services/backend_api_service.dart';
 import 'package:emergency_front_end/features/nearby/nearby_screen.dart';
 import 'package:emergency_front_end/features/profile/profile_screen.dart';
-import 'package:emergency_front_end/features/services/models/emergency_service_kind.dart';
+import 'package:emergency_front_end/models/emergency_service_kind.dart';
 import 'package:emergency_front_end/models/backend_user.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:emergency_front_end/theme/app_text_styles.dart';
@@ -29,6 +31,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const Duration _locationTimeout = Duration(seconds: 12);
   static const services = [
     EmergencyServiceKind.police,
     EmergencyServiceKind.hospital,
@@ -337,9 +340,21 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    return Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-    );
+    try {
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
+      ).timeout(_locationTimeout);
+    } on TimeoutException {
+      final lastKnownPosition = await Geolocator.getLastKnownPosition();
+      if (lastKnownPosition != null) {
+        return lastKnownPosition;
+      }
+      throw Exception(
+        'Location lookup took too long. Move to an open area or check GPS/network and try again.',
+      );
+    }
   }
 
   Future<void> _confirmResetSos() async {

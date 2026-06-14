@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:emergency_front_end/models/first_aid_category.dart';
 import 'package:http/http.dart' as http;
@@ -19,6 +20,7 @@ class BackendApiService {
   BackendApiService._();
 
   static final BackendApiService instance = BackendApiService._();
+  static const Duration _requestTimeout = Duration(seconds: 15);
 
   Future<BackendSession> login({
     required String email,
@@ -144,22 +146,31 @@ class BackendApiService {
     try {
       switch (method) {
         case 'GET':
-          response = await http.get(uri, headers: headers);
+          response = await http
+              .get(uri, headers: headers)
+              .timeout(_requestTimeout);
           break;
         case 'POST':
-          response = await http.post(
-            uri,
-            headers: <String, String>{
-              'Accept': 'application/json',
-              'Content-Type': 'application/json; charset=utf-8',
-              ...?headers,
-            },
-            body: jsonEncode(body ?? <String, dynamic>{}),
-          );
+          response = await http
+              .post(
+                uri,
+                headers: <String, String>{
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json; charset=utf-8',
+                  ...?headers,
+                },
+                body: jsonEncode(body ?? <String, dynamic>{}),
+              )
+              .timeout(_requestTimeout);
           break;
         default:
           throw const BackendApiException(500, 'Unsupported request method.');
       }
+    } on TimeoutException {
+      throw const BackendApiException(
+        504,
+        'The backend request timed out. Please check the server or your network and try again.',
+      );
     } catch (error) {
       throw BackendApiException(
         503,
@@ -201,33 +212,44 @@ class BackendApiService {
     try {
       switch (method) {
         case 'GET':
-          response = await http.get(uri, headers: headers);
+          response = await http
+              .get(uri, headers: headers)
+              .timeout(_requestTimeout);
           break;
         case 'POST':
-          response = await http.post(
-            uri,
-            headers: <String, String>{
-              'Accept': 'application/json',
-              'Content-Type': 'application/json; charset=utf-8',
-              ...?headers,
-            },
-            body: jsonEncode(body ?? <String, dynamic>{}),
-          );
+          response = await http
+              .post(
+                uri,
+                headers: <String, String>{
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json; charset=utf-8',
+                  ...?headers,
+                },
+                body: jsonEncode(body ?? <String, dynamic>{}),
+              )
+              .timeout(_requestTimeout);
           break;
         case 'PATCH':
-          response = await http.patch(
-            uri,
-            headers: <String, String>{
-              'Accept': 'application/json',
-              'Content-Type': 'application/json; charset=utf-8',
-              ...?headers,
-            },
-            body: jsonEncode(body ?? <String, dynamic>{}),
-          );
+          response = await http
+              .patch(
+                uri,
+                headers: <String, String>{
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json; charset=utf-8',
+                  ...?headers,
+                },
+                body: jsonEncode(body ?? <String, dynamic>{}),
+              )
+              .timeout(_requestTimeout);
           break;
         default:
           throw const BackendApiException(500, 'Unsupported request method.');
       }
+    } on TimeoutException {
+      throw const BackendApiException(
+        504,
+        'The backend request timed out. Please check the server or your network and try again.',
+      );
     } catch (error) {
       throw BackendApiException(
         503,
@@ -296,11 +318,9 @@ class BackendApiService {
   }
 
   Future<List<FirstAidCategory>> fetchFirstAidCategories() async {
-    final uri = Uri.parse(
-      '${AppConstants.apiBaseUrl}/first-aid-categories',
-    );
+    final uri = Uri.parse('${AppConstants.apiBaseUrl}/first-aid-categories');
 
-    final response = await http.get(uri);
+    final response = await http.get(uri).timeout(_requestTimeout);
 
     if (response.statusCode != 200) {
       throw BackendApiException(
@@ -309,17 +329,12 @@ class BackendApiService {
       );
     }
 
-    final List<dynamic> json =
-        jsonDecode(response.body);
+    final List<dynamic> json = jsonDecode(response.body);
 
-    return json
-        .map((e) => FirstAidCategory.fromJson(e))
-        .toList();
+    return json.map((e) => FirstAidCategory.fromJson(e)).toList();
   }
 
   Future<Map<String, dynamic>> fetchFirstAidCategory(String id) async {
-    return _getJson(
-      '/first-aid-categories/$id',
-    );
+    return _getJson('/first-aid-categories/$id');
   }
 }

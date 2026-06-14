@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 
 class QuickActionTile extends StatelessWidget {
   final String title;
@@ -17,8 +16,10 @@ class QuickActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Material(
-      color: AppColors.card,
+      color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -26,7 +27,9 @@ class QuickActionTile extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFEDEDED)),
+            border: Border.all(
+              color: theme.dividerColor.withValues(alpha: 0.75),
+            ),
           ),
           padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
           child: Column(
@@ -36,10 +39,10 @@ class QuickActionTile extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textDark,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ],

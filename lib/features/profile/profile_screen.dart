@@ -37,7 +37,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool _isLoading = true;
   bool _isSaving = false;
-  String _selectedLanguage = 'EN';
   String? _errorMessage;
   BackendUser? _currentUser;
 
@@ -72,17 +71,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (remoteUser != null) {
         _applyUser(remoteUser);
       }
-      } catch (error) {
-        _errorMessage = error.toString();
+    } catch (error) {
+      _errorMessage = error.toString();
 
-        if (mounted) {
-          await CustomErrorDialog.show(
-            context,
-            title: 'Loading Failed',
-            message: 'Unable to load your profile information.',
-          );
-        }
-      }finally {
+      if (mounted) {
+        await CustomErrorDialog.show(
+          context,
+          title: 'Loading Failed',
+          message: 'Unable to load your profile information.',
+        );
+      }
+    } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -246,11 +245,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: SafeArea(
         child: _isLoading
-          ? const Center(
-            child: CircularProgressIndicator(
-              color: AppColors.primaryRed,
-            ),
-          )
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.primaryRed),
+              )
             : SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
                 child: Column(
@@ -265,43 +262,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    const SizedBox(height: 7),
-                    _SectionCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Language', style: AppTextStyles.label),
-                          const SizedBox(height: 9),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _LanguagePill(
-                                  label: 'EN',
-                                  selected: _selectedLanguage == 'EN',
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedLanguage = 'EN';
-                                    });
-                                  },
-                                ),
-                              ),
-                              Expanded(
-                                child: _LanguagePill(
-                                  label: 'KH',
-                                  selected: _selectedLanguage == 'KH',
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedLanguage = 'KH';
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 9),
                     _SectionCard(
                       child: Row(
                         children: [
@@ -503,56 +463,6 @@ class _EditableField extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _LanguagePill extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _LanguagePill({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        height: 34,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primaryRed
-              : isDarkMode
-              ? theme.colorScheme.surface.withValues(alpha: 0.86)
-              : const Color(0xFFEFEFEF),
-          border: Border.all(color: theme.dividerColor),
-          borderRadius: BorderRadius.horizontal(
-            left: label == 'EN' ? const Radius.circular(7) : Radius.zero,
-            right: label == 'KH' ? const Radius.circular(7) : Radius.zero,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected
-                ? Colors.white
-                : isDarkMode
-                ? Colors.white70
-                : AppColors.textDark,
-            fontWeight: FontWeight.w800,
-            fontSize: 11,
-          ),
-        ),
-      ),
     );
   }
 }

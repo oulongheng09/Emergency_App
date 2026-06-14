@@ -29,15 +29,17 @@ class FirstAidDetailScreen extends StatelessWidget {
     this.user,
     this.token,
     this.onUserUpdated,
-    this.onLogout, required List<String> steps,
+    this.onLogout,
+    required List<String> steps,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: theme.scaffoldBackgroundColor,
         foregroundColor: AppColors.primaryRed,
         title: Text('$title Instructions'),
         centerTitle: true,
@@ -69,7 +71,7 @@ class FirstAidDetailScreen extends StatelessWidget {
                 children: [
                   _HeroCard(title: title, subtitle: subtitle, icon: heroIcon),
                   const SizedBox(height: 24),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10),
                     child: Text(
                       'Stay Calm. Follow these steps.',
@@ -77,7 +79,7 @@ class FirstAidDetailScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textDark,
+                        color: theme.colorScheme.onSurface,
                         height: 1.15,
                       ),
                     ),
@@ -90,7 +92,7 @@ class FirstAidDetailScreen extends StatelessWidget {
                       description: tips[i].content,
                       icon: _stepIcon(i),
                     ),
-                  ]
+                  ],
                 ],
               ),
             ),
@@ -137,6 +139,7 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         children: [
@@ -144,9 +147,11 @@ class _HeroCard extends StatelessWidget {
             width: 132,
             height: 132,
             decoration: BoxDecoration(
-              color: AppColors.card,
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(
+                color: theme.dividerColor.withValues(alpha: 0.75),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.08),
@@ -179,10 +184,10 @@ class _HeroCard extends StatelessWidget {
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textDark,
+              color: theme.colorScheme.onSurface,
             ),
           ),
         ],
@@ -206,13 +211,17 @@ class _InstructionStepCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = AppColors.card;
-    final borderColor = AppColors.border;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final cardColor = theme.colorScheme.surface;
+    final borderColor = theme.dividerColor.withValues(alpha: 0.75);
     final numberBg = AppColors.primaryRed;
     final numberColor = Colors.white;
-    final titleColor = AppColors.textDark;
-    final descriptionColor = AppColors.textGrey;
-    final iconBg = AppColors.lightRed;
+    final titleColor = theme.colorScheme.onSurface;
+    final descriptionColor = isDarkMode ? Colors.white70 : AppColors.textGrey;
+    final iconBg = isDarkMode
+        ? AppColors.primaryRed.withValues(alpha: 0.16)
+        : AppColors.lightRed;
 
     return Material(
       color: Colors.transparent,

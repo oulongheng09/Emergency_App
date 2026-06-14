@@ -19,6 +19,9 @@ class NearbyServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -27,9 +30,11 @@ class NearbyServiceCard extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(
+              color: theme.dividerColor.withValues(alpha: 0.75),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,11 +45,11 @@ class NearbyServiceCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       location.name.toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w900,
                         height: 1.1,
-                        color: AppColors.textDark,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -54,7 +59,9 @@ class NearbyServiceCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEAF2FF),
+                      color: isDarkMode
+                          ? AppColors.policeBlue.withValues(alpha: 0.16)
+                          : const Color(0xFFEAF2FF),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -102,10 +109,10 @@ class NearbyServiceCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       location.address,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textDark,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ),

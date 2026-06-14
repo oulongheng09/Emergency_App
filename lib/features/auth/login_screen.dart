@@ -34,92 +34,86 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
- Future<void> _submit() async {
-  final fullName = _fullNameController.text.trim();
-  final email = _emailController.text.trim();
-  final password = _passwordController.text;
+  Future<void> _submit() async {
+    final fullName = _fullNameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
 
-  if (email.isEmpty || password.isEmpty) {
-    await CustomErrorDialog.show(
-      context,
-      title: 'Missing Information',
-      message: 'Please enter both email and password.',
-    );
-    return;
-  }
-
-  if (_isRegisterMode && fullName.isEmpty) {
-    await CustomErrorDialog.show(
-      context,
-      title: 'Full Name Required',
-      message: 'Please enter your full name before creating an account.',
-    );
-    return;
-  }
-
-  setState(() => _isLoading = true);
-
-  LoadingDialog.show(context);
-
-  try {
-    final api = BackendApiService.instance;
-
-    final session = _isRegisterMode
-        ? await _registerAndLogin(
-            api,
-            fullName: fullName,
-            email: email,
-            password: password,
-          )
-        : await _loginAndLoadProfile(
-            api,
-            email: email,
-            password: password,
-          );
-
-    if (mounted) {
-      LoadingDialog.hide(context);
-    }
-
-    if (_isRegisterMode && mounted) {
-      await CustomSuccessDialog.show(
-        context,
-        title: 'Account Created',
-        message:
-            'Your account has been created successfully. Welcome to KhmerSOS.',
-      );
-    }
-
-    widget.onAuthenticated(session);
-  } on BackendApiException catch (error) {
-    if (mounted) {
-      LoadingDialog.hide(context);
-
+    if (email.isEmpty || password.isEmpty) {
       await CustomErrorDialog.show(
         context,
-        title: _isRegisterMode
-            ? 'Registration Failed'
-            : 'Login Failed',
-        message: error.message,
+        title: 'Missing Information',
+        message: 'Please enter both email and password.',
       );
+      return;
     }
-  } catch (_) {
-    if (mounted) {
-      LoadingDialog.hide(context);
 
+    if (_isRegisterMode && fullName.isEmpty) {
       await CustomErrorDialog.show(
         context,
-        title: 'Connection Error',
-        message:
-            'Unable to connect to the server. Please check your internet connection and try again.',
+        title: 'Full Name Required',
+        message: 'Please enter your full name before creating an account.',
       );
+      return;
     }
-  } finally {
-    if (mounted) {
-      setState(() => _isLoading = false);
+
+    setState(() => _isLoading = true);
+
+    LoadingDialog.show(context);
+
+    try {
+      final api = BackendApiService.instance;
+
+      final session = _isRegisterMode
+          ? await _registerAndLogin(
+              api,
+              fullName: fullName,
+              email: email,
+              password: password,
+            )
+          : await _loginAndLoadProfile(api, email: email, password: password);
+
+      if (mounted) {
+        LoadingDialog.hide(context);
+      }
+
+      if (_isRegisterMode && mounted) {
+        await CustomSuccessDialog.show(
+          context,
+          title: 'Account Created',
+          message:
+              'Your account has been created successfully. Welcome to KhmerSOS.',
+        );
+      }
+
+      widget.onAuthenticated(session);
+    } on BackendApiException catch (error) {
+      if (mounted) {
+        LoadingDialog.hide(context);
+
+        await CustomErrorDialog.show(
+          context,
+          title: _isRegisterMode ? 'Registration Failed' : 'Login Failed',
+          message: error.message,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        LoadingDialog.hide(context);
+
+        await CustomErrorDialog.show(
+          context,
+          title: 'Connection Error',
+          message:
+              'Unable to connect to the server. Please check your internet connection and try again.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
-}
 
   Future<BackendSession> _registerAndLogin(
     BackendApiService api, {
@@ -143,8 +137,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -152,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
               decoration: BoxDecoration(
-                color: AppColors.card,
+                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
@@ -168,11 +164,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text('KhmerSOS', style: AppTextStyles.title),
                   ),
                   const SizedBox(height: 8),
-                  const Align(
+                  Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'Connect to the backend and sync your emergency profile.',
-                      style: AppTextStyles.body,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.72,
+                        ),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -208,12 +209,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         visualDensity: VisualDensity.compact,
                         side: const BorderSide(color: AppColors.border),
                       ),
-                      const Expanded(
+                      Expanded(
                         child: Padding(
                           padding: EdgeInsets.only(top: 8),
                           child: Text(
                             'By continuing, you allow the app to sync your account with the backend.',
-                            style: AppTextStyles.small,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.68,
+                              ),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ),
@@ -224,8 +230,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     text: _isLoading
                         ? 'PLEASE WAIT'
                         : _isRegisterMode
-                            ? 'CREATE ACCOUNT'
-                            : 'LOGIN',
+                        ? 'CREATE ACCOUNT'
+                        : 'LOGIN',
                     icon: _isLoading ? null : Icons.arrow_forward,
                     onPressed: _isLoading ? null : _submit,
                   ),
@@ -251,10 +257,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     size: 18,
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Your profile is stored in the backend and synchronized through Supabase.',
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.small,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.68,
+                      ),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -283,21 +294,37 @@ class _AuthField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.label),
+        Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
+          style: TextStyle(color: theme.colorScheme.onSurface),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: AppTextStyles.small,
+            hintStyle: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+            ),
+            filled: true,
+            fillColor: isDarkMode
+                ? theme.colorScheme.surface.withValues(alpha: 0.82)
+                : Colors.white,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(4),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: theme.dividerColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(4),
