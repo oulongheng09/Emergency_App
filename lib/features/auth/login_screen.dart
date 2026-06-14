@@ -5,6 +5,9 @@ import '../../models/backend_session.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/primary_button.dart';
+import '../../widgets/custom_error_dialog.dart';
+import '../../widgets/custom_success_dialog.dart';
+import '../../widgets/loading_dialog.dart';
 
 class LoginScreen extends StatefulWidget {
   final ValueChanged<BackendSession> onAuthenticated;
@@ -31,45 +34,92 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    final fullName = _fullNameController.text.trim();
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
+ Future<void> _submit() async {
+  final fullName = _fullNameController.text.trim();
+  final email = _emailController.text.trim();
+  final password = _passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
-      _showError('Email and password are required.');
-      return;
+  if (email.isEmpty || password.isEmpty) {
+    await CustomErrorDialog.show(
+      context,
+      title: 'Missing Information',
+      message: 'Please enter both email and password.',
+    );
+    return;
+  }
+
+  if (_isRegisterMode && fullName.isEmpty) {
+    await CustomErrorDialog.show(
+      context,
+      title: 'Full Name Required',
+      message: 'Please enter your full name before creating an account.',
+    );
+    return;
+  }
+
+  setState(() => _isLoading = true);
+
+  LoadingDialog.show(context);
+
+  try {
+    final api = BackendApiService.instance;
+
+    final session = _isRegisterMode
+        ? await _registerAndLogin(
+            api,
+            fullName: fullName,
+            email: email,
+            password: password,
+          )
+        : await _loginAndLoadProfile(
+            api,
+            email: email,
+            password: password,
+          );
+
+    if (mounted) {
+      LoadingDialog.hide(context);
     }
 
-    if (_isRegisterMode && fullName.isEmpty) {
-      _showError('Full name is required to register.');
-      return;
+    if (_isRegisterMode && mounted) {
+      await CustomSuccessDialog.show(
+        context,
+        title: 'Account Created',
+        message:
+            'Your account has been created successfully. Welcome to KhmerSOS.',
+      );
     }
 
-    setState(() => _isLoading = true);
+    widget.onAuthenticated(session);
+  } on BackendApiException catch (error) {
+    if (mounted) {
+      LoadingDialog.hide(context);
 
-    try {
-      final api = BackendApiService.instance;
-      final session = _isRegisterMode
-          ? await _registerAndLogin(
-              api,
-              fullName: fullName,
-              email: email,
-              password: password,
-            )
-          : await _loginAndLoadProfile(api, email: email, password: password);
+      await CustomErrorDialog.show(
+        context,
+        title: _isRegisterMode
+            ? 'Registration Failed'
+            : 'Login Failed',
+        message: error.message,
+      );
+    }
+  } catch (_) {
+    if (mounted) {
+      LoadingDialog.hide(context);
 
-      widget.onAuthenticated(session);
-    } on BackendApiException catch (error) {
-      _showError(error.message);
-    } catch (_) {
-      _showError('Unable to connect to the backend.');
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      await CustomErrorDialog.show(
+        context,
+        title: 'Connection Error',
+        message:
+            'Unable to connect to the server. Please check your internet connection and try again.',
+      );
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
+}
 
   Future<BackendSession> _registerAndLogin(
     BackendApiService api, {
@@ -89,13 +139,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final session = await api.login(email: email, password: password);
     final user = await api.fetchCurrentUser(session.token) ?? session.user;
     return session.copyWith(user: user);
-  }
-
-  void _showError(String message) {
-    if (!mounted) {
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -136,6 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (_isRegisterMode) ...[
                     _AuthField(
                       controller: _fullNameController,
+
                       label: 'Full Name',
                       hint: 'e.g. John Doe',
                     ),

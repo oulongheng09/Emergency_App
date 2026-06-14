@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:emergency_front_end/models/first_aid_category.dart';
 import 'package:http/http.dart' as http;
 import '../../models/backend_session.dart';
 import '../../models/backend_user.dart';
@@ -291,5 +292,33 @@ class BackendApiService {
       }
     }
     return fallback.isEmpty ? 'Request failed.' : fallback;
+  }
+
+  Future<List<FirstAidCategory>> fetchFirstAidCategories() async {
+    final uri = Uri.parse(
+      '${AppConstants.apiBaseUrl}/first-aid-categories',
+    );
+
+    final response = await http.get(uri);
+
+    if (response.statusCode != 200) {
+      throw BackendApiException(
+        response.statusCode,
+        'Unable to load categories',
+      );
+    }
+
+    final List<dynamic> json =
+        jsonDecode(response.body);
+
+    return json
+        .map((e) => FirstAidCategory.fromJson(e))
+        .toList();
+  }
+
+  Future<Map<String, dynamic>> fetchFirstAidCategory(String id) async {
+    return _getJson(
+      '/first-aid-categories/$id',
+    );
   }
 }
