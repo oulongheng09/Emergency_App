@@ -276,7 +276,8 @@ class BackendApiService {
 
   BackendUser? _readUser(dynamic json) {
     if (json is Map<String, dynamic>) {
-      return BackendUser.fromJson(json);
+      final user = BackendUser.fromJson(json);
+      return user;
     }
     return null;
   }

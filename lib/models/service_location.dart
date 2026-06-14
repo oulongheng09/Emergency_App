@@ -1,4 +1,4 @@
-import 'package:emergency_front_end/features/services/models/emergency_service_kind.dart';
+import 'package:emergency_front_end/models/emergency_service_kind.dart';
 import 'package:latlong2/latlong.dart';
 
 class ServiceLocation {

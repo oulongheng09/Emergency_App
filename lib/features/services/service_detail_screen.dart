@@ -1,20 +1,46 @@
 import 'package:emergency_front_end/core/utils/launcher_utils.dart';
-import 'package:emergency_front_end/features/services/models/service_location.dart';
-import 'package:emergency_front_end/features/services/widgets/service_action_button.dart';
-import 'package:emergency_front_end/features/services/widgets/service_detail_section.dart';
-import 'package:emergency_front_end/features/services/widgets/service_screen_shell.dart';
+import 'package:emergency_front_end/models/service_location.dart';
+import 'package:emergency_front_end/widgets/service_detail_section.dart';
+import 'package:emergency_front_end/widgets/service_screen_shell.dart';
+import 'package:emergency_front_end/models/backend_user.dart';
+import 'package:emergency_front_end/features/profile/profile_screen.dart';
+import 'package:emergency_front_end/features/map/map_screen.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter/material.dart';
 
 class ServiceDetailScreen extends StatelessWidget {
-  const ServiceDetailScreen({super.key, required this.location});
+  const ServiceDetailScreen({
+    super.key,
+    required this.location,
+    this.user,
+    this.token,
+    this.onUserUpdated,
+    this.onLogout,
+  });
 
   final ServiceLocation location;
+  final BackendUser? user;
+  final String? token;
+  final ValueChanged<BackendUser>? onUserUpdated;
+  final VoidCallback? onLogout;
 
   @override
   Widget build(BuildContext context) {
     return ServiceScreenShell(
       title: '${location.kind.navigationTitle} Details',
+      onSettingsTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ProfileScreen(
+              user: user,
+              token: token,
+              onSaved: onUserUpdated,
+              onLogout: onLogout,
+            ),
+          ),
+        );
+      },
       child: ListView(
         padding: const EdgeInsets.fromLTRB(8, 2, 8, 20),
         children: [
@@ -70,25 +96,6 @@ class ServiceDetailScreen extends StatelessWidget {
           const SizedBox(height: 14),
           _DirectionsPreview(location: location),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 44,
-            child: ElevatedButton.icon(
-              onPressed: () => LauncherUtils.makePhoneCall(location.phone),
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: AppColors.primaryRed,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.call_rounded, size: 18),
-              label: const Text(
-                'CALL NOW',
-                style: TextStyle(fontWeight: FontWeight.w900),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -288,36 +295,78 @@ class _DirectionsPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.textDark,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      // decoration: BoxDecoration(
+      //   color: AppColors.textDark,
+      //   borderRadius: BorderRadius.circular(10),
+      // ),
       child: Column(
         children: [
           Container(
-            height: 88,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              gradient: const LinearGradient(
-                colors: [Color(0xFFF0F0F0), Color(0xFFD8D8D8)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
+            height: 180,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
+            clipBehavior: Clip.antiAlias,
             child: Stack(
-              alignment: Alignment.center,
               children: [
-                const Icon(Icons.map_rounded, size: 52, color: Colors.white70),
+                FlutterMap(
+                  options: MapOptions(
+                    initialCenter: location.position,
+                    initialZoom: 15,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.none,
+                    ),
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.emergency_front_end',
+                    ),
+
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: location.position,
+                          width: 50,
+                          height: 50,
+                          child: Icon(
+                            Icons.location_pin,
+                            color: location.kind.color,
+                            size: 50,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
                 Positioned(
-                  bottom: 10,
-                  child: ServiceActionButton.outlined(
-                    label: 'GET DIRECTIONS',
-                    icon: Icons.route_outlined,
-                    onPressed: () {
-                      LauncherUtils.openGoogleMapSearch(
-                        destination: location.position,
-                      );
-                    },
+                  left: 12,
+                  right: 12,
+                  bottom: 12,
+                  child: SizedBox(
+                    height: 42,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MapScreen(
+                              destination: location,
+                              showBackButton: true,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryRed,
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: const Icon(Icons.navigation),
+                      label: const Text(
+                        'GET DIRECTIONS',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
                 ),
               ],

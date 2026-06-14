@@ -1,4 +1,4 @@
-import 'package:emergency_front_end/features/map/models/emergency_place.dart';
+import 'package:emergency_front_end/models/emergency_place.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 

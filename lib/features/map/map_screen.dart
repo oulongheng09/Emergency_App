@@ -3,14 +3,15 @@ import 'dart:convert';
 
 import 'package:emergency_front_end/core/utils/distance_utils.dart';
 import 'package:emergency_front_end/core/utils/launcher_utils.dart';
-import 'package:emergency_front_end/features/map/data/emergency_places.dart';
-import 'package:emergency_front_end/features/map/models/emergency_place.dart';
-import 'package:emergency_front_end/features/map/models/emergency_place_distance.dart';
-import 'package:emergency_front_end/features/map/models/route_data.dart';
-import 'package:emergency_front_end/features/map/widgets/map_header.dart';
-import 'package:emergency_front_end/features/map/widgets/map_info_card.dart';
-import 'package:emergency_front_end/features/map/widgets/service_marker.dart';
+import 'package:emergency_front_end/data/emergency_places.dart';
+import 'package:emergency_front_end/models/emergency_place.dart';
+import 'package:emergency_front_end/models/emergency_place_distance.dart';
+import 'package:emergency_front_end/models/route_data.dart';
+import 'package:emergency_front_end/widgets/map_header.dart';
+import 'package:emergency_front_end/widgets/map_info_card.dart';
+import 'package:emergency_front_end/widgets/service_marker.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
+import 'package:emergency_front_end/models/service_location.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -18,7 +19,10 @@ import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  const MapScreen({super.key, this.destination, this.showBackButton = false});
+
+  final ServiceLocation? destination;
+  final bool showBackButton;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -34,6 +38,7 @@ class _MapScreenState extends State<MapScreen> {
   Position? _currentPosition;
   EmergencyPlace? _selectedPlace;
   RouteData? _activeRoute;
+  ServiceLocation? _destination;
 
   bool _isLoadingLocation = true;
   bool _isLoadingRoute = false;
@@ -46,6 +51,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
+    _destination = widget.destination;
     _initLocationTracking();
   }
 
@@ -125,6 +131,9 @@ class _MapScreenState extends State<MapScreen> {
 
     setState(() {
       _currentPosition = position;
+      if (_destination != null && _activeRoute == null) {
+        _loadRouteToService(_destination!);
+      }
       _isLoadingLocation = false;
       _locationMessage = null;
     });
@@ -168,6 +177,101 @@ class _MapScreenState extends State<MapScreen> {
     });
 
     unawaited(_loadRouteToPlace(place));
+  }
+
+  Future<void> _loadRouteToService(
+    ServiceLocation service, {
+    bool fitRoute = true,
+  }) async {
+    final user = _currentPosition;
+
+    if (user == null) return;
+
+    setState(() {
+      _isLoadingRoute = true;
+    });
+
+    final origin = LatLng(user.latitude, user.longitude);
+
+    final uri = Uri.parse(
+      'https://router.project-osrm.org/route/v1/driving/'
+      '${origin.longitude},${origin.latitude};'
+      '${service.position.longitude},${service.position.latitude}'
+      '?overview=full&geometries=geojson&steps=false',
+    );
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode != 200) {
+        throw Exception('Routing request failed');
+      }
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final routes = body['routes'] as List<dynamic>?;
+      if (routes == null || routes.isEmpty) {
+        throw Exception('No route found');
+      }
+
+      final route = routes.first as Map<String, dynamic>;
+      final geometry = route['geometry'] as Map<String, dynamic>;
+      final coordinates = geometry['coordinates'] as List<dynamic>;
+
+      final points = coordinates
+          .map((item) => item as List<dynamic>)
+          .map(
+            (item) => LatLng(
+              (item[1] as num).toDouble(),
+              (item[0] as num).toDouble(),
+            ),
+          )
+          .toList();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _activeRoute = RouteData(
+          points: points,
+          distanceKm: ((route['distance'] as num?)?.toDouble() ?? 0) / 1000,
+          durationMinutes: ((route['duration'] as num?)?.toDouble() ?? 0) / 60,
+          origin: origin,
+        );
+        _isLoadingRoute = false;
+        _routeMessage = null;
+      });
+
+      if (fitRoute && points.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+
+          final bounds = LatLngBounds.fromPoints(points);
+          _mapController.fitCamera(
+            CameraFit.bounds(
+              bounds: bounds,
+              padding: EdgeInsets.fromLTRB(
+                42,
+                72,
+                42,
+                _isPanelExpanded ? 240 : 110,
+              ),
+            ),
+          );
+        });
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _activeRoute = null;
+        _isLoadingRoute = false;
+        _routeMessage =
+            'Could not load a road route right now. Live navigation still opens in Google Maps.';
+      });
+    }
   }
 
   Future<void> _loadRouteToPlace(
@@ -336,6 +440,7 @@ class _MapScreenState extends State<MapScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: null,
       body: SafeArea(
         child: Column(
           children: [
@@ -372,13 +477,40 @@ class _MapScreenState extends State<MapScreen> {
                         ),
                       MarkerLayer(
                         markers: [
-                          ...emergencyPlaces.map(_buildServiceMarker),
+                          if (_destination == null)
+                            ...emergencyPlaces.map(_buildServiceMarker),
+
                           if (_currentPosition != null)
                             _buildUserMarker(_currentPosition!),
+
+                          if (_destination != null)
+                            Marker(
+                              point: _destination!.position,
+                              width: 50,
+                              height: 50,
+                              child: const Icon(
+                                Icons.location_pin,
+                                size: 50,
+                                color: Colors.red,
+                              ),
+                            ),
                         ],
                       ),
                     ],
                   ),
+                  if (widget.showBackButton)
+                    Positioned(
+                      top: 16,
+                      left: 16,
+                      child: FloatingActionButton.small(
+                        heroTag: 'map_back_button',
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.primaryRed,
+                        elevation: 2,
+                        onPressed: () => Navigator.pop(context),
+                        child: const Icon(Icons.arrow_back),
+                      ),
+                    ),
                   Positioned(
                     top: 16,
                     right: 16,
@@ -406,27 +538,73 @@ class _MapScreenState extends State<MapScreen> {
                       ],
                     ),
                   ),
-                  Positioned(
-                    left: 14,
-                    right: 14,
-                    bottom: 14,
-                    child: MapInfoCard(
-                      isExpanded: _isPanelExpanded,
-                      isLoadingLocation: _isLoadingLocation,
-                      isLoadingRoute: _isLoadingRoute,
-                      isLaunchingDirections: _isLaunchingDirections,
-                      locationMessage: _locationMessage,
-                      routeMessage: _routeMessage,
-                      currentPosition: _currentPosition,
-                      selectedPlace: _selectedPlace,
-                      activeRoute: _activeRoute,
-                      places: sortedPlaces.take(3).toList(),
-                      onRefreshLocation: _initLocationTracking,
-                      onPlaceSelected: _selectPlace,
-                      onOpenDirections: _openDirections,
-                      onToggleExpanded: _togglePanel,
+                  if (_destination == null)
+                    Positioned(
+                      left: 14,
+                      right: 14,
+                      bottom: 14,
+                      child: MapInfoCard(
+                        isExpanded: _isPanelExpanded,
+                        isLoadingLocation: _isLoadingLocation,
+                        isLoadingRoute: _isLoadingRoute,
+                        isLaunchingDirections: _isLaunchingDirections,
+                        locationMessage: _locationMessage,
+                        routeMessage: _routeMessage,
+                        currentPosition: _currentPosition,
+                        selectedPlace: _selectedPlace,
+                        activeRoute: _activeRoute,
+                        places: sortedPlaces.take(3).toList(),
+                        onRefreshLocation: _initLocationTracking,
+                        onPlaceSelected: _selectPlace,
+                        onOpenDirections: _openDirections,
+                        onToggleExpanded: _togglePanel,
+                      ),
                     ),
-                  ),
+                  if (_destination != null)
+                    Positioned(
+                      left: 14,
+                      right: 14,
+                      bottom: 14,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(blurRadius: 12, color: Colors.black12),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _destination!.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+
+                            const SizedBox(height: 6),
+
+                            Text(_destination!.address),
+
+                            const SizedBox(height: 12),
+
+                            Text(
+                              'Distance: ${_activeRoute?.distanceKm.toStringAsFixed(1) ?? '--'} km',
+                            ),
+
+                            const SizedBox(height: 4),
+
+                            Text(
+                              'ETA: ${_activeRoute?.durationMinutes.toStringAsFixed(0) ?? '--'} min',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

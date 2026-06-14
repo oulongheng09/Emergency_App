@@ -1,4 +1,4 @@
-import 'package:emergency_front_end/features/map/models/emergency_place.dart';
+import 'package:emergency_front_end/models/emergency_place.dart';
 import 'package:latlong2/latlong.dart';
 
 const List<EmergencyPlace> emergencyPlaces = [

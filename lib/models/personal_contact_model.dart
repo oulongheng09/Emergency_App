@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class PersonalContactModel {
   const PersonalContactModel({
@@ -16,6 +17,17 @@ class PersonalContactModel {
   final String phone;
   final IconData icon;
   final Color iconColor;
+
+  factory PersonalContactModel.fromJson(Map<String, dynamic> json) {
+    return PersonalContactModel(
+      id: json['id'].toString(),
+      name: json['name'] ?? '',
+      relationship: json['relationship'] ?? '',
+      phone: json['phone_number']?.toString() ?? '',
+      icon: Icons.person_rounded,
+      iconColor: AppColors.policeBlue,
+    );
+  }
 
   PersonalContactModel copyWith({
     String? id,
