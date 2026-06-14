@@ -1,8 +1,8 @@
 import 'package:emergency_front_end/core/utils/launcher_utils.dart';
-import 'package:emergency_front_end/features/services/models/service_location.dart';
-import 'package:emergency_front_end/features/services/widgets/service_action_button.dart';
-import 'package:emergency_front_end/features/services/widgets/service_detail_section.dart';
-import 'package:emergency_front_end/features/services/widgets/service_screen_shell.dart';
+import 'package:emergency_front_end/models/service_location.dart';
+import 'package:emergency_front_end/widgets/service_action_button.dart';
+import 'package:emergency_front_end/widgets/service_detail_section.dart';
+import 'package:emergency_front_end/widgets/service_screen_shell.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 

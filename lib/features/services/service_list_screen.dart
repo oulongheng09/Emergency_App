@@ -1,8 +1,8 @@
-import 'package:emergency_front_end/features/services/data/service_catalog.dart';
-import 'package:emergency_front_end/features/services/models/emergency_service_kind.dart';
+import 'package:emergency_front_end/data/service_catalog.dart';
+import 'package:emergency_front_end/models/emergency_service_kind.dart';
 import 'package:emergency_front_end/features/services/service_detail_screen.dart';
-import 'package:emergency_front_end/features/services/widgets/nearby_service_card.dart';
-import 'package:emergency_front_end/features/services/widgets/service_screen_shell.dart';
+import 'package:emergency_front_end/widgets/nearby_service_card.dart';
+import 'package:emergency_front_end/widgets/service_screen_shell.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 

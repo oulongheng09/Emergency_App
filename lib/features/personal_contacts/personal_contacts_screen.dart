@@ -1,14 +1,24 @@
 import 'package:emergency_front_end/features/personal_contacts/add_edit_contact_screen.dart';
 import 'package:emergency_front_end/models/personal_contact_model.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
+import '../profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 import '../../models/backend_user.dart';
 import '../../services/emergency_contact_service.dart';
 
 class PersonalContactsScreen extends StatefulWidget {
   final BackendUser? user;
+  final String? token;
+  final ValueChanged<BackendUser>? onUserUpdated;
+  final VoidCallback? onLogout;
 
-  const PersonalContactsScreen({super.key, required this.user});
+  const PersonalContactsScreen({
+    super.key,
+    required this.user,
+    required this.token,
+    this.onUserUpdated,
+    this.onLogout,
+  });
 
   @override
   State<PersonalContactsScreen> createState() => _PersonalContactsScreenState();
@@ -212,7 +222,20 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 20),
           children: [
-            const _ContactsHeader(),
+            _ContactsHeader(
+              onSettingsTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ProfileScreen(
+                      user: widget.user,
+                      token: widget.token,
+                      onSaved: widget.onUserUpdated,
+                      onLogout: widget.onLogout,
+                    ),
+                  ),
+                );
+              },
+            ),
             const SizedBox(height: 6),
             const Text(
               'My Emergency Contacts',
@@ -359,7 +382,9 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
 }
 
 class _ContactsHeader extends StatelessWidget {
-  const _ContactsHeader();
+  final VoidCallback onSettingsTap;
+
+  const _ContactsHeader({required this.onSettingsTap});
 
   @override
   Widget build(BuildContext context) {
@@ -381,7 +406,7 @@ class _ContactsHeader extends StatelessWidget {
         ),
         const Spacer(),
         IconButton(
-          onPressed: () {},
+          onPressed: onSettingsTap,
           icon: const Icon(Icons.settings_outlined, size: 18),
         ),
       ],

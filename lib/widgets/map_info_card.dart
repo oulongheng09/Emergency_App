@@ -1,7 +1,7 @@
 import 'package:emergency_front_end/core/utils/distance_utils.dart';
-import 'package:emergency_front_end/features/map/models/emergency_place.dart';
-import 'package:emergency_front_end/features/map/models/emergency_place_distance.dart';
-import 'package:emergency_front_end/features/map/models/route_data.dart';
+import 'package:emergency_front_end/models/emergency_place.dart';
+import 'package:emergency_front_end/models/emergency_place_distance.dart';
+import 'package:emergency_front_end/models/route_data.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:emergency_front_end/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
