@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/services/backend_api_service.dart';
 import '../../models/backend_user.dart';
+import '../../state/app_settings_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/primary_button.dart';
@@ -195,11 +196,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final settings = AppSettingsScope.of(context);
+    final isDarkMode = settings.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -266,11 +270,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              'Appearance\nLight Mode',
-                              style: AppTextStyles.label,
+                              'Appearance\n${isDarkMode ? 'Dark Mode' : 'Light Mode'}',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: colorScheme.onSurface,
+                              ),
                             ),
                           ),
-                          const _MockSwitch(),
+                          Switch(
+                            value: isDarkMode,
+                            activeThumbColor: colorScheme.primary,
+                            onChanged: settings.setDarkMode,
+                          ),
                         ],
                       ),
                     ),
@@ -367,13 +378,18 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.lightRed.withValues(alpha: 0.55),
+        color: isDarkMode
+            ? theme.colorScheme.surface
+            : AppColors.lightRed.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.65)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,22 +427,34 @@ class _EditableField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.label),
+        Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
         const SizedBox(height: 5),
         TextField(
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
+          style: TextStyle(color: theme.colorScheme.onSurface),
           decoration: InputDecoration(
             isDense: true,
             filled: true,
-            fillColor: AppColors.card,
+            fillColor: isDarkMode
+                ? theme.colorScheme.surface.withValues(alpha: 0.78)
+                : AppColors.card,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(4),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: theme.dividerColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(4),
@@ -456,14 +484,21 @@ class _LanguagePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return InkWell(
       onTap: onTap,
       child: Container(
         height: 34,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryRed : const Color(0xFFEFEFEF),
-          border: Border.all(color: AppColors.border),
+          color: selected
+              ? AppColors.primaryRed
+              : isDarkMode
+              ? theme.colorScheme.surface.withValues(alpha: 0.86)
+              : const Color(0xFFEFEFEF),
+          border: Border.all(color: theme.dividerColor),
           borderRadius: BorderRadius.horizontal(
             left: label == 'EN' ? const Radius.circular(7) : Radius.zero,
             right: label == 'KH' ? const Radius.circular(7) : Radius.zero,
@@ -472,37 +507,13 @@ class _LanguagePill extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.white : AppColors.textDark,
+            color: selected
+                ? Colors.white
+                : isDarkMode
+                ? Colors.white70
+                : AppColors.textDark,
             fontWeight: FontWeight.w800,
             fontSize: 11,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MockSwitch extends StatelessWidget {
-  const _MockSwitch();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 45,
-      height: 25,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: AppColors.textDark,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          width: 18,
-          height: 18,
-          decoration: const BoxDecoration(
-            color: AppColors.primaryRed,
-            shape: BoxShape.circle,
           ),
         ),
       ),
