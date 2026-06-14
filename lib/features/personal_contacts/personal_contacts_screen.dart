@@ -1,11 +1,11 @@
 import 'package:emergency_front_end/features/personal_contacts/add_edit_contact_screen.dart';
+import 'package:emergency_front_end/features/profile/profile_screen.dart';
+import 'package:emergency_front_end/core/services/backend_api_service.dart';
 import 'package:emergency_front_end/models/backend_user.dart';
 import 'package:emergency_front_end/models/personal_contact_model.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:emergency_front_end/l10n/app_text.dart';
-import '../profile/profile_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:emergency_front_end/core/services/backend_api_service.dart';
 
 class PersonalContactsScreen extends StatefulWidget {
   final BackendUser? user;
