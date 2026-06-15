@@ -3,8 +3,8 @@ import 'package:emergency_front_end/models/backend_user.dart';
 import 'package:emergency_front_end/models/personal_contact_model.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import '../profile/profile_screen.dart';
+import 'package:emergency_front_end/core/services/emergency_contact_service.dart';
 import 'package:flutter/material.dart';
-import 'package:emergency_front_end/features/profile/profile_screen.dart';
 
 class PersonalContactsScreen extends StatefulWidget {
   final BackendUser? user;
@@ -21,8 +21,7 @@ class PersonalContactsScreen extends StatefulWidget {
   });
 
   @override
-  State<PersonalContactsScreen> createState() =>
-      _PersonalContactsScreenState();
+  State<PersonalContactsScreen> createState() => _PersonalContactsScreenState();
 }
 
 class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
