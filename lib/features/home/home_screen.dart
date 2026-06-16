@@ -225,12 +225,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisCount: crossAxisCount,
                                 mainAxisSpacing: 14,
                                 crossAxisSpacing: 14,
-                                childAspectRatio: isTablet ? 1.45 : 1.18,
+                                childAspectRatio: isTablet ? 1.56 : 1.32,
                               ),
                           itemBuilder: (context, index) {
                             final item = services[index];
                             final tile = QuickActionTile(
                               title: item.homeLabel,
+                              subtitle: item.homeSubtitle,
+                              callLabel: 'Call ${item.quickCallNumber}',
                               icon: item.icon,
                               iconColor: item.color,
                               onTap: () => _handleServiceTap(item),

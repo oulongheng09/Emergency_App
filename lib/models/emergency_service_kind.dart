@@ -78,4 +78,17 @@ enum EmergencyServiceKind {
         return 'FIRE DEPT';
     }
   }
+
+  String get homeSubtitle {
+    switch (this) {
+      case EmergencyServiceKind.hospital:
+        return 'Emergency Medical';
+      case EmergencyServiceKind.police:
+        return 'Emergency Police';
+      case EmergencyServiceKind.ambulance:
+        return 'Ambulance Service';
+      case EmergencyServiceKind.fireDepartment:
+        return 'Fire Emergency';
+    }
+  }
 }
