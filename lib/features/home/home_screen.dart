@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:emergency_front_end/core/services/backend_api_service.dart';
 import 'package:emergency_front_end/features/nearby/nearby_screen.dart';
 import 'package:emergency_front_end/features/profile/profile_screen.dart';
-import 'package:emergency_front_end/features/services/models/emergency_service_kind.dart';
 import 'package:emergency_front_end/models/backend_user.dart';
 import 'package:emergency_front_end/models/emergency_service_kind.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
