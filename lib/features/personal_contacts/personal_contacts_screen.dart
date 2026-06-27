@@ -291,8 +291,10 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 20),
@@ -313,11 +315,11 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
               style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.w900,
-                color: AppColors.textDark,
+                color: theme.colorScheme.onSurface,
                 height: 0.95,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 15),
             Text(
               AppText.t(
                 context,
@@ -327,7 +329,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textGrey,
+                color: isDarkMode ? Colors.white70 : AppColors.textGrey,
                 height: 1.35,
               ),
             ),
@@ -364,9 +366,15 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFEAF4FF),
+                color: isDarkMode
+                    ? const Color(0xFF1B2532)
+                    : const Color(0xFFEAF4FF),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFD5E6FF)),
+                border: Border.all(
+                  color: isDarkMode
+                      ? const Color(0xFF304154)
+                      : const Color(0xFFD5E6FF),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,7 +407,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textGrey,
+                      color: isDarkMode ? Colors.white70 : AppColors.textGrey,
                       height: 1.4,
                     ),
                   ),
@@ -487,6 +495,7 @@ class _ContactsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         const Icon(
@@ -505,7 +514,11 @@ class _ContactsHeader extends StatelessWidget {
         ),
         const Spacer(),
         IconButton(
-          icon: const Icon(Icons.settings_outlined, size: 18),
+          icon: Icon(
+            Icons.settings_outlined,
+            size: 18,
+            color: theme.colorScheme.onSurface,
+          ),
           onPressed: () {
             Navigator.of(context).push(
               MaterialPageRoute(
@@ -537,12 +550,13 @@ class _EmergencyContactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.75)),
       ),
       child: Row(
         children: [
@@ -562,28 +576,36 @@ class _EmergencyContactCard extends StatelessWidget {
               children: [
                 Text(
                   data.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.textDark,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
+
                 const SizedBox(height: 2),
+
                 Text(
                   data.relationship,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textGrey,
+                    color:
+                        theme.textTheme.bodySmall?.color?.withValues(
+                          alpha: 0.7,
+                        ) ??
+                        AppColors.textGrey,
                   ),
                 ),
+
                 const SizedBox(height: 2),
+
                 Text(
                   data.phone,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textDark,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -594,7 +616,9 @@ class _EmergencyContactCard extends StatelessWidget {
             color: const Color.fromARGB(255, 0, 170, 255),
             onTap: onEdit,
           ),
+
           const SizedBox(width: 8),
+
           _ContactIconButton(
             icon: Icons.delete_outline_rounded,
             color: Color(0xFFF06B6B),
@@ -619,6 +643,7 @@ class _ContactIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -627,7 +652,7 @@ class _ContactIconButton extends StatelessWidget {
         height: 28,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.75)),
         ),
         child: Icon(icon, size: 16, color: color),
       ),
