@@ -40,7 +40,7 @@ The goal of this project is to provide a practical emergency support application
 
 ### Application Preview
 
-![KhmerSOS application screenshot](./flutter_01.png)
+![alt text](image.png)
 
 ## Technology Stack
 
