@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../l10n/app_text.dart';
 
 class SplashScreen extends StatefulWidget {
   final VoidCallback onFinish;
@@ -29,15 +30,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: AppColors.primaryRed,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.health_and_safety, color: Colors.white, size: 70),
-            SizedBox(height: 14),
-            Text(
+            const Icon(Icons.health_and_safety, color: Colors.white, size: 70),
+            const SizedBox(height: 14),
+            const Text(
               'KhmerSOS',
               style: TextStyle(
                 fontSize: 30,
@@ -45,10 +46,14 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: Colors.white,
               ),
             ),
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
             Text(
-              'Emergency help in your hand',
-              style: TextStyle(color: Colors.white70),
+              AppText.t(
+                context,
+                en: 'Emergency help in your hand',
+                km: 'ជំនួយបន្ទាន់នៅក្នុងដៃអ្នក',
+              ),
+              style: TextStyle(color: Colors.white70.withValues(alpha: 1)),
             ),
           ],
         ),

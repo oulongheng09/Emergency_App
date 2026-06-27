@@ -21,6 +21,15 @@ class BackendApiService {
 
   static final BackendApiService instance = BackendApiService._();
   static const Duration _requestTimeout = Duration(seconds: 15);
+  String _languageCode = 'en';
+
+  void setLanguageCode(String languageCode) {
+    if (languageCode.trim().isEmpty) {
+      _languageCode = 'en';
+      return;
+    }
+    _languageCode = languageCode.toLowerCase();
+  }
 
   Future<BackendSession> login({
     required String email,
@@ -142,23 +151,20 @@ class BackendApiService {
   }) async {
     final uri = Uri.parse('${AppConstants.apiBaseUrl}$path');
     late final http.Response response;
+    final requestHeaders = _buildHeaders(headers);
 
     try {
       switch (method) {
         case 'GET':
           response = await http
-              .get(uri, headers: headers)
+              .get(uri, headers: requestHeaders)
               .timeout(_requestTimeout);
           break;
         case 'POST':
           response = await http
               .post(
                 uri,
-                headers: <String, String>{
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json; charset=utf-8',
-                  ...?headers,
-                },
+                headers: requestHeaders,
                 body: jsonEncode(body ?? <String, dynamic>{}),
               )
               .timeout(_requestTimeout);
@@ -208,23 +214,20 @@ class BackendApiService {
   }) async {
     final uri = Uri.parse('${AppConstants.apiBaseUrl}$path');
     late final http.Response response;
+    final requestHeaders = _buildHeaders(headers);
 
     try {
       switch (method) {
         case 'GET':
           response = await http
-              .get(uri, headers: headers)
+              .get(uri, headers: requestHeaders)
               .timeout(_requestTimeout);
           break;
         case 'POST':
           response = await http
               .post(
                 uri,
-                headers: <String, String>{
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json; charset=utf-8',
-                  ...?headers,
-                },
+                headers: requestHeaders,
                 body: jsonEncode(body ?? <String, dynamic>{}),
               )
               .timeout(_requestTimeout);
@@ -233,11 +236,7 @@ class BackendApiService {
           response = await http
               .patch(
                 uri,
-                headers: <String, String>{
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json; charset=utf-8',
-                  ...?headers,
-                },
+                headers: requestHeaders,
                 body: jsonEncode(body ?? <String, dynamic>{}),
               )
               .timeout(_requestTimeout);
@@ -274,6 +273,15 @@ class BackendApiService {
     }
 
     return <String, dynamic>{'data': decoded};
+  }
+
+  Map<String, String> _buildHeaders(Map<String, String>? headers) {
+    return <String, String>{
+      'Accept': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
+      'Accept-Language': _languageCode,
+      ...?headers,
+    };
   }
 
   BackendSession _readSession(Map<String, dynamic>? sessionJson) {
@@ -318,23 +326,59 @@ class BackendApiService {
   }
 
   Future<List<FirstAidCategory>> fetchFirstAidCategories() async {
-    final uri = Uri.parse('${AppConstants.apiBaseUrl}/first-aid-categories');
-
-    final response = await http.get(uri).timeout(_requestTimeout);
-
-    if (response.statusCode != 200) {
-      throw BackendApiException(
-        response.statusCode,
-        'Unable to load categories',
-      );
-    }
-
-    final List<dynamic> json = jsonDecode(response.body);
-
+    final json = await _requestList(
+      'GET',
+      '/first-aid-categories?lang=$_languageCode',
+    );
     return json.map((e) => FirstAidCategory.fromJson(e)).toList();
   }
 
   Future<Map<String, dynamic>> fetchFirstAidCategory(String id) async {
-    return _getJson('/first-aid-categories/$id');
+    return _getJson('/first-aid-categories/$id?lang=$_languageCode');
+  }
+
+  Future<List<dynamic>> getEmergencyContacts(String userId) async {
+    return _requestList('GET', '/user-emergency-contacts/user/$userId');
+  }
+
+  Future<void> createEmergencyContact({
+    required String userId,
+    required String name,
+    required String relationship,
+    required String phone,
+  }) async {
+    await _postJson('/user-emergency-contacts', {
+      'user_id': userId,
+      'name': name,
+      'relationship': relationship,
+      'phone_number': int.parse(phone),
+    });
+  }
+
+  Future<void> updateEmergencyContact({
+    required String id,
+    required String name,
+    required String relationship,
+    required String phone,
+  }) async {
+    await _patchJson('/user-emergency-contacts/$id', {
+      'name': name,
+      'relationship': relationship,
+      'phone_number': int.parse(phone),
+    });
+  }
+
+  Future<void> _delete(String path) async {
+    final uri = Uri.parse('${AppConstants.apiBaseUrl}$path');
+
+    final response = await http.delete(uri).timeout(_requestTimeout);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw BackendApiException(response.statusCode, response.body);
+    }
+  }
+
+  Future<void> deleteEmergencyContact(String id) async {
+    await _delete('/user-emergency-contacts/$id');
   }
 }

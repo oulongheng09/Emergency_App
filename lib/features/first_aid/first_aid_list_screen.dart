@@ -13,6 +13,7 @@ import 'first_aid_detail_screen.dart';
 import '../profile/profile_screen.dart';
 import '../../core/services/backend_api_service.dart';
 import '../../models/first_aid_category.dart';
+import '../../l10n/app_text.dart';
 
 const _vidCpr = 'videos/cpr.mp4';
 const _vidBurns = 'videos/burn.mp4';
@@ -22,40 +23,60 @@ const _vidSnakeBite = 'videos/snake bite.mp4';
 
 class _TrainingItem {
   final String title;
+  final String titleKm;
   final String subtitle;
+  final String subtitleKm;
   final String videoUrl;
 
   const _TrainingItem({
     required this.title,
+    required this.titleKm,
     required this.subtitle,
+    required this.subtitleKm,
     required this.videoUrl,
   });
+
+  String localizedTitle(BuildContext context) =>
+      AppText.t(context, en: title, km: titleKm);
+
+  String localizedSubtitle(BuildContext context) =>
+      AppText.t(context, en: subtitle, km: subtitleKm);
 }
 
 const _trainingItems = <_TrainingItem>[
   _TrainingItem(
     title: 'CPR',
+    titleKm: 'CPR',
     subtitle: 'Cardiopulmonary Resuscitation',
+    subtitleKm: 'ការជួយដង្ហើមបេះដូង',
     videoUrl: _vidCpr,
   ),
   _TrainingItem(
     title: 'Burns',
+    titleKm: 'ការរលាក',
     subtitle: 'Cool, cover, and protect',
+    subtitleKm: 'ត្រជាក់ គ្រប និងការពារ',
     videoUrl: _vidBurns,
   ),
   _TrainingItem(
     title: 'Bleeding',
+    titleKm: 'ហូរឈាម',
     subtitle: 'Pressure first',
+    subtitleKm: 'សំពាធជាមុន',
     videoUrl: _vidBleeding,
   ),
   _TrainingItem(
     title: 'Choking',
+    titleKm: 'ស្ទះដង្ហើម',
     subtitle: 'Clear the airway',
+    subtitleKm: 'បើកផ្លូវដង្ហើម',
     videoUrl: _vidChoking,
   ),
   _TrainingItem(
     title: 'Snake Bite',
+    titleKm: 'ពស់ចឹក',
     subtitle: 'Immobilize and get help',
+    subtitleKm: 'មិនឲ្យចលនា និងស្នើជំនួយ',
     videoUrl: _vidSnakeBite,
   ),
 ];
@@ -137,184 +158,367 @@ class _FirstAidListScreenState extends State<FirstAidListScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _HeaderBar(
-                onSettingsTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ProfileScreen(
-                        user: widget.user,
-                        token: widget.token,
-                        onSaved: widget.onUserUpdated,
-                        onLogout: widget.onLogout,
-                      ),
-                    ),
-                  );
-                },
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final horizontalPadding = width < 600 ? 16.0 : 22.0;
+            final maxContentWidth = width >= 1100 ? 1040.0 : double.infinity;
+            final crossAxisCount = width < 600
+                ? 1
+                : width < 900
+                ? 2
+                : 3;
+            final cardExtent = width < 600
+                ? 190.0
+                : width < 900
+                ? 190.0
+                : 200.0;
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                8,
+                horizontalPadding,
+                24,
               ),
-              const SizedBox(height: 28),
-              const AppSectionTitle(
-                title: 'First-Aid Guide',
-                subtitle:
-                    'Instant protocols for critical emergencies. Tap any category for immediate instructions.',
-              ),
-              const SizedBox(height: 22),
-              FutureBuilder<List<FirstAidCategory>>(
-                future: _categoriesFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (snapshot.hasError) {
-                    return Center(child: Text(snapshot.error.toString()));
-                  }
-
-                  final categories = snapshot.data ?? [];
-
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: categories.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1.1,
-                        ),
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-
-                      final color = _getCategoryColor(category.name);
-
-                      return FirstAidCard(
-                        title: category.name,
-                        icon: _getCategoryIcon(category.name),
-                        foregroundColor: color,
-                        borderColor: color.withValues(alpha: 0.15),
-                        onTap: () async {
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (_) => const Center(
-                              child: CircularProgressIndicator(),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxContentWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _HeaderBar(
+                        onSettingsTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ProfileScreen(
+                                user: widget.user,
+                                token: widget.token,
+                                onSaved: widget.onUserUpdated,
+                                onLogout: widget.onLogout,
+                              ),
                             ),
                           );
-
-                          try {
-                            final data = await BackendApiService.instance
-                                .fetchFirstAidCategory(category.id);
-
-                            if (!context.mounted) return;
-
-                            Navigator.pop(context); // close loading
-
-                            final tips = (data['tips'] as List)
-                                .map((e) => FirstAidTip.fromJson(e))
-                                .toList();
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => FirstAidDetailScreen(
-                                  title: category.name,
-                                  subtitle: 'Emergency First Aid',
-                                  tips: tips,
-                                  heroIcon: _getCategoryIcon(category.name),
-                                  user: widget.user,
-                                  token: widget.token,
-                                  onUserUpdated: widget.onUserUpdated,
-                                  onLogout: widget.onLogout,
-                                  steps: [],
-                                ),
-                              ),
-                            );
-                          } catch (e) {
-                            if (!context.mounted) return;
-
-                            Navigator.pop(context);
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(e.toString()),
-                                backgroundColor: Colors.red,
+                        },
+                      ),
+                      const SizedBox(height: 28),
+                      AppSectionTitle(
+                        title: AppText.t(
+                          context,
+                          en: 'First-Aid Guide',
+                          km: 'មគ្គុទេសក៍ជំនួយបឋម',
+                        ),
+                        subtitle: AppText.t(
+                          context,
+                          en: 'Instant protocols for critical emergencies. Tap any category for immediate instructions.',
+                          km: 'វិធានការភ្លាមៗសម្រាប់ស្ថានការណ៍បន្ទាន់។ ចុចលើប្រភេទណាមួយដើម្បីមើលការណែនាំភ្លាមៗ។',
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      FutureBuilder<List<FirstAidCategory>>(
+                        future: _categoriesFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 24),
+                                child: CircularProgressIndicator(),
                               ),
                             );
                           }
+
+                          if (snapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Text(snapshot.error.toString()),
+                            );
+                          }
+
+                          final categories = snapshot.data ?? [];
+
+                          return GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: categories.length,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                  mainAxisExtent: cardExtent,
+                                ),
+                            itemBuilder: (context, index) {
+                              final category = categories[index];
+                              final color = _getCategoryColor(category.name);
+
+                              return FirstAidCard(
+                                title: category.name,
+                                subtitle: _categorySubtitle(
+                                  context,
+                                  category.name,
+                                ),
+                                helperText: AppText.t(
+                                  context,
+                                  en: 'Tap for steps',
+                                  km: 'ចុចដើម្បីមើលជំហាន',
+                                ),
+                                icon: _getCategoryIcon(category.name),
+                                foregroundColor: color,
+                                borderColor: color.withValues(alpha: 0.18),
+                                accentColor: color,
+                                onTap: () async {
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (_) => const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+
+                                  try {
+                                    final data = await BackendApiService
+                                        .instance
+                                        .fetchFirstAidCategory(category.id);
+
+                                    if (!context.mounted) return;
+
+                                    Navigator.pop(context); // close loading
+
+                                    final tips = (data['tips'] as List)
+                                        .map((e) => FirstAidTip.fromJson(e))
+                                        .toList();
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => FirstAidDetailScreen(
+                                          title: category.name,
+                                          subtitle: AppText.t(
+                                            context,
+                                            en: 'Emergency First Aid',
+                                            km: 'ជំនួយបឋមបន្ទាន់',
+                                          ),
+                                          tips: tips,
+                                          heroIcon: _getCategoryIcon(
+                                            category.name,
+                                          ),
+                                          user: widget.user,
+                                          token: widget.token,
+                                          onUserUpdated: widget.onUserUpdated,
+                                          onLogout: widget.onLogout,
+                                          steps: [],
+                                        ),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    if (!context.mounted) return;
+
+                                    Navigator.pop(context);
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(e.toString()),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                },
+                              );
+                            },
+                          );
                         },
-                      );
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 22),
-              _TrainingBanner(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const TrainingModuleScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-              const AppSectionTitle(title: 'OTHER SCENARIOS'),
-              const SizedBox(height: 12),
-              _ScenarioRow(
-                label: 'Drowning',
-                onTap: () => _openDetail(
-                  context,
-                  title: 'Drowning',
-                  subtitle: 'Get the person to safety',
-                  steps: const [
-                    'Remove the person from water only if safe.',
-                    'Call emergency services.',
-                    'Start rescue breathing if trained.',
-                    'Keep monitoring until help arrives.',
-                  ],
+                      ),
+                      const SizedBox(height: 22),
+                      _TrainingBanner(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TrainingModuleScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      AppSectionTitle(
+                        title: AppText.t(
+                          context,
+                          en: 'OTHER SCENARIOS',
+                          km: 'ស្ថានការណ៍ផ្សេងទៀត',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _ScenarioRow(
+                        label: AppText.t(context, en: 'Drowning', km: 'លង់ទឹក'),
+                        onTap: () => _openDetail(
+                          context,
+                          title: AppText.t(
+                            context,
+                            en: 'Drowning',
+                            km: 'លង់ទឹក',
+                          ),
+                          subtitle: AppText.t(
+                            context,
+                            en: 'Get the person to safety',
+                            km: 'នាំអ្នករងគ្រោះទៅកន្លែងសុវត្ថិភាព',
+                          ),
+                          steps: [
+                            AppText.t(
+                              context,
+                              en: 'Remove the person from water only if safe.',
+                              km: 'យកមនុស្សចេញពីទឹកតែបើមានសុវត្ថិភាព។',
+                            ),
+                            AppText.t(
+                              context,
+                              en: 'Call emergency services.',
+                              km: 'ទូរស័ព្ទហៅសេវាបន្ទាន់។',
+                            ),
+                            AppText.t(
+                              context,
+                              en: 'Start rescue breathing if trained.',
+                              km: 'ចាប់ផ្តើមដង្ហើមជំនួយ ប្រសិនបើអ្នកបានបណ្តុះបណ្តាល។',
+                            ),
+                            AppText.t(
+                              context,
+                              en: 'Keep monitoring until help arrives.',
+                              km: 'តាមដានជាបន្តបន្ទាប់រហូតដល់ជំនួយមកដល់។',
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _ScenarioRow(
+                        label: AppText.t(
+                          context,
+                          en: 'Electric Shock',
+                          km: 'ឆក់អគ្គិសនី',
+                        ),
+                        onTap: () => _openDetail(
+                          context,
+                          title: AppText.t(
+                            context,
+                            en: 'Electric Shock',
+                            km: 'ឆក់អគ្គិសនី',
+                          ),
+                          subtitle: AppText.t(
+                            context,
+                            en: 'Disconnect power first',
+                            km: 'ផ្តាច់ភ្លើងជាមុន',
+                          ),
+                          steps: [
+                            AppText.t(
+                              context,
+                              en: 'Turn off the power source if safe.',
+                              km: 'បិទប្រភពអគ្គិសនី បើមានសុវត្ថិភាព។',
+                            ),
+                            AppText.t(
+                              context,
+                              en: 'Do not touch the person until safe.',
+                              km: 'កុំប៉ះអ្នករងគ្រោះរហូតដល់មានសុវត្ថិភាព។',
+                            ),
+                            AppText.t(
+                              context,
+                              en: 'Call emergency services.',
+                              km: 'ទូរស័ព្ទហៅសេវាបន្ទាន់។',
+                            ),
+                            AppText.t(
+                              context,
+                              en: 'Check for breathing and injuries.',
+                              km: 'ពិនិត្យការដកដង្ហើម និងរបួស។',
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _ScenarioRow(
+                        label: AppText.t(
+                          context,
+                          en: 'Heat Stroke',
+                          km: 'ជំងឺក្តៅខ្លាំង',
+                        ),
+                        onTap: () => _openDetail(
+                          context,
+                          title: AppText.t(
+                            context,
+                            en: 'Heat Stroke',
+                            km: 'ជំងឺក្តៅខ្លាំង',
+                          ),
+                          subtitle: AppText.t(
+                            context,
+                            en: 'Cool fast, call help',
+                            km: 'ត្រជាក់ឲ្យលឿន ហៅជំនួយ',
+                          ),
+                          steps: [
+                            AppText.t(
+                              context,
+                              en: 'Move to a cool place immediately.',
+                              km: 'ផ្លាស់ទីទៅកន្លែងត្រជាក់ភ្លាមៗ។',
+                            ),
+                            AppText.t(
+                              context,
+                              en: 'Remove excess clothing.',
+                              km: 'ដោះសម្លៀកបំពាក់លើសចេញ។',
+                            ),
+                            AppText.t(
+                              context,
+                              en: 'Cool with water and fans.',
+                              km: 'បំបាត់កំដៅដោយទឹក និងកង្ហារ។',
+                            ),
+                            AppText.t(
+                              context,
+                              en: 'Call emergency services urgently.',
+                              km: 'ទូរស័ព្ទហៅសេវាបន្ទាន់ភ្លាមៗ។',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              _ScenarioRow(
-                label: 'Electric Shock',
-                onTap: () => _openDetail(
-                  context,
-                  title: 'Electric Shock',
-                  subtitle: 'Disconnect power first',
-                  steps: const [
-                    'Turn off the power source if safe.',
-                    'Do not touch the person until safe.',
-                    'Call emergency services.',
-                    'Check for breathing and injuries.',
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              _ScenarioRow(
-                label: 'Heat Stroke',
-                onTap: () => _openDetail(
-                  context,
-                  title: 'Heat Stroke',
-                  subtitle: 'Cool fast, call help',
-                  steps: const [
-                    'Move to a cool place immediately.',
-                    'Remove excess clothing.',
-                    'Cool with water and fans.',
-                    'Call emergency services urgently.',
-                  ],
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
+  }
+
+  String _categorySubtitle(BuildContext context, String name) {
+    switch (name.toLowerCase()) {
+      case 'bleeding':
+        return AppText.t(
+          context,
+          en: 'Control the flow fast',
+          km: 'គ្រប់គ្រងការហូរឈាមឲ្យលឿន',
+        );
+      case 'burns':
+        return AppText.t(
+          context,
+          en: 'Cool, cover, protect',
+          km: 'ត្រជាក់ គ្រប និងការពារ',
+        );
+      case 'choking':
+        return AppText.t(context, en: 'Clear the airway', km: 'បើកផ្លូវដង្ហើម');
+      case 'cpr':
+        return AppText.t(
+          context,
+          en: 'Life-saving rhythm',
+          km: 'ចង្វាក់សង្គ្រោះជីវិត',
+        );
+      case 'snake bite':
+        return AppText.t(
+          context,
+          en: 'Immobilize and get help',
+          km: 'មិនឲ្យចលនា និងស្នើជំនួយ',
+        );
+      default:
+        return AppText.t(
+          context,
+          en: 'Open the emergency steps',
+          km: 'បើកជំហានបន្ទាន់',
+        );
+    }
   }
 
   void _openDetail(
@@ -423,8 +627,12 @@ class _TrainingBanner extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  const Text(
-                    'TRAINING MODULES AVAILABLE',
+                  Text(
+                    AppText.t(
+                      context,
+                      en: 'TRAINING MODULES AVAILABLE',
+                      km: 'មានម៉ូឌុលបណ្តុះបណ្តាល',
+                    ),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
@@ -434,8 +642,12 @@ class _TrainingBanner extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const AppInfoChip(
-                    label: 'Tap to open',
+                  AppInfoChip(
+                    label: AppText.t(
+                      context,
+                      en: 'Tap to open',
+                      km: 'ចុចដើម្បីបើក',
+                    ),
                     backgroundColor: Color(0x33FFFFFF),
                     textColor: Colors.white,
                     icon: Icons.arrow_forward_ios,
@@ -461,7 +673,9 @@ class TrainingModuleScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: theme.scaffoldBackgroundColor,
         foregroundColor: AppColors.primaryRed,
-        title: const Text('Training Modules'),
+        title: Text(
+          AppText.t(context, en: 'Training Modules', km: 'ម៉ូឌុលបណ្តុះបណ្តាល'),
+        ),
         centerTitle: true,
         elevation: 0,
       ),
@@ -516,7 +730,7 @@ class TrainingModuleScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item.title,
+                            item.localizedTitle(context),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
@@ -525,7 +739,7 @@ class TrainingModuleScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            item.subtitle,
+                            item.localizedSubtitle(context),
                             style: TextStyle(
                               fontSize: 14,
                               color: theme.brightness == Brightness.dark
@@ -598,7 +812,7 @@ class _TrainingVideoDialogState extends State<_TrainingVideoDialog> {
               children: [
                 Expanded(
                   child: Text(
-                    widget.item.title,
+                    widget.item.localizedTitle(context),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -667,13 +881,19 @@ class _TrainingVideoDialogState extends State<_TrainingVideoDialog> {
                       color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           CircularProgressIndicator(),
                           SizedBox(height: 12),
-                          Text('Loading training video...'),
+                          Text(
+                            AppText.t(
+                              context,
+                              en: 'Loading training video...',
+                              km: 'កំពុងផ្ទុកវីដេអូបណ្តុះបណ្តាល...',
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -684,10 +904,10 @@ class _TrainingVideoDialogState extends State<_TrainingVideoDialog> {
             const SizedBox(height: 16),
             PrimaryButton(
               text: !_controller.value.isInitialized
-                  ? 'Loading...'
+                  ? AppText.t(context, en: 'Loading...', km: 'កំពុងផ្ទុក...')
                   : _controller.value.isPlaying
-                  ? 'Pause'
-                  : 'Play',
+                  ? AppText.t(context, en: 'Pause', km: 'ផ្អាក')
+                  : AppText.t(context, en: 'Play', km: 'ចាក់'),
               icon: _controller.value.isPlaying
                   ? Icons.pause
                   : Icons.play_arrow,

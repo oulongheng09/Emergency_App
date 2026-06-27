@@ -1,9 +1,10 @@
-import 'package:emergency_front_end/core/services/emergency_contact_service.dart';
 import 'package:emergency_front_end/features/personal_contacts/add_edit_contact_screen.dart';
+import 'package:emergency_front_end/features/profile/profile_screen.dart';
+import 'package:emergency_front_end/core/services/backend_api_service.dart';
 import 'package:emergency_front_end/models/backend_user.dart';
 import 'package:emergency_front_end/models/personal_contact_model.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
-import '../profile/profile_screen.dart';
+import 'package:emergency_front_end/l10n/app_text.dart';
 import 'package:flutter/material.dart';
 
 class PersonalContactsScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class PersonalContactsScreen extends StatefulWidget {
 }
 
 class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
-  final EmergencyContactService _service = EmergencyContactService();
+  final BackendApiService _service = BackendApiService.instance;
 
   List<PersonalContactModel> _contacts = [];
 
@@ -90,7 +91,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
     }
 
     try {
-      final data = await _service.getContacts(widget.user!.id);
+      final data = await _service.getEmergencyContacts(widget.user!.id);
 
       setState(() {
         _contacts = data.map<PersonalContactModel>((e) {
@@ -125,7 +126,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
     }
 
     try {
-      await _service.createContact(
+      await _service.createEmergencyContact(
         userId: widget.user!.id,
         name: result.name,
         relationship: result.relationship,
@@ -136,10 +137,16 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Contact added successfully'),
+          SnackBar(
+            content: Text(
+              AppText.t(
+                context,
+                en: 'Contact added successfully',
+                km: 'បានបន្ថែមទំនាក់ទំនងជោគជ័យ',
+              ),
+            ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -166,7 +173,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
     }
 
     try {
-      await _service.updateContact(
+      await _service.updateEmergencyContact(
         id: contact.id,
         name: result.name,
         relationship: result.relationship,
@@ -177,10 +184,16 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Contact updated successfully'),
+          SnackBar(
+            content: Text(
+              AppText.t(
+                context,
+                en: 'Contact updated successfully',
+                km: 'បានអាប់ដេតទំនាក់ទំនងជោគជ័យ',
+              ),
+            ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -203,16 +216,27 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Contact'),
-          content: Text('Are you sure you want to delete ${contact.name}?'),
+          title: Text(
+            AppText.t(context, en: 'Delete Contact', km: 'លុបទំនាក់ទំនង'),
+          ),
+          content: Text(
+            AppText.t(
+              context,
+              en: 'Are you sure you want to delete ${contact.name}?',
+              km: 'តើអ្នកពិតជាចង់លុប ${contact.name} មែនទេ?',
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(AppText.t(context, en: 'Cancel', km: 'បោះបង់')),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              child: Text(
+                AppText.t(context, en: 'Delete', km: 'លុប'),
+                style: const TextStyle(color: Colors.red),
+              ),
             ),
           ],
         );
@@ -224,16 +248,22 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
     }
 
     try {
-      await _service.deleteContact(contact.id);
+      await _service.deleteEmergencyContact(contact.id);
 
       await _loadContacts();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Contact deleted successfully'),
+          SnackBar(
+            content: Text(
+              AppText.t(
+                context,
+                en: 'Contact deleted successfully',
+                km: 'បានលុបទំនាក់ទំនងជោគជ័យ',
+              ),
+            ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -241,7 +271,13 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to delete contact: $e'),
+            content: Text(
+              AppText.t(
+                context,
+                en: 'Failed to delete contact: $e',
+                km: 'លុបទំនាក់ទំនងបរាជ័យ: $e',
+              ),
+            ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -255,10 +291,8 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 20),
@@ -271,21 +305,29 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'My Emergency Contacts',
+              AppText.t(
+                context,
+                en: 'My Emergency Contacts',
+                km: 'ទំនាក់ទំនងបន្ទាន់របស់ខ្ញុំ',
+              ),
               style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.w900,
-                color: theme.colorScheme.onSurface,
+                color: AppColors.textDark,
                 height: 0.95,
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              'These individuals will be notified instantly when you trigger an SOS alert.',
+              AppText.t(
+                context,
+                en: 'These individuals will be notified instantly when you trigger an SOS alert.',
+                km: 'មនុស្សទាំងនេះនឹងទទួលបានការជូនដំណឹងភ្លាមៗពេលអ្នកបើក SOS។',
+              ),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: isDarkMode ? Colors.white70 : AppColors.textGrey,
+                color: AppColors.textGrey,
                 height: 1.35,
               ),
             ),
@@ -303,9 +345,9 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text(
-                  'ADD CONTACT',
-                  style: TextStyle(fontWeight: FontWeight.w900),
+                label: Text(
+                  AppText.t(context, en: 'ADD CONTACT', km: 'បន្ថែមទំនាក់ទំនង'),
+                  style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
             ),
@@ -322,20 +364,14 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDarkMode
-                    ? const Color(0xFF1B2532)
-                    : const Color(0xFFEAF4FF),
+                color: const Color(0xFFEAF4FF),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isDarkMode
-                      ? const Color(0xFF304154)
-                      : const Color(0xFFD5E6FF),
-                ),
+                border: Border.all(color: const Color(0xFFD5E6FF)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
                       Icon(
                         Icons.info_outline_rounded,
@@ -344,7 +380,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                       ),
                       SizedBox(width: 6),
                       Text(
-                        'Setup Tip',
+                        AppText.t(context, en: 'Setup Tip', km: 'ដំណឹងត្រៀម'),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
@@ -355,11 +391,15 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'We recommend having at least 3 active emergency contacts for redundancy in critical situations.',
+                    AppText.t(
+                      context,
+                      en: 'We recommend having at least 3 active emergency contacts for redundancy in critical situations.',
+                      km: 'យើងស្នើឲ្យមានយ៉ាងហោចណាស់ 3 ទំនាក់ទំនងបន្ទាន់សកម្ម ដើម្បីមានការបម្រុងក្នុងស្ថានការណ៍សំខាន់ៗ។',
+                    ),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: isDarkMode ? Colors.white70 : AppColors.textGrey,
+                      color: AppColors.textGrey,
                       height: 1.4,
                     ),
                   ),
@@ -384,7 +424,11 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                     top: 18,
                     child: _PreviewTile(
                       icon: Icons.add_box_outlined,
-                      label: 'Contacts',
+                      label: AppText.t(
+                        context,
+                        en: 'Contacts',
+                        km: 'ទំនាក់ទំនង',
+                      ),
                     ),
                   ),
                   Positioned(
@@ -392,7 +436,11 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                     top: 18,
                     child: _PreviewTile(
                       icon: Icons.shield_outlined,
-                      label: 'SOS Alerts',
+                      label: AppText.t(
+                        context,
+                        en: 'SOS Alerts',
+                        km: 'ការជូនដំណឹង SOS',
+                      ),
                     ),
                   ),
                   Positioned(
@@ -400,7 +448,11 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                     bottom: 18,
                     child: _PreviewTile(
                       icon: Icons.wallet_outlined,
-                      label: 'Medical ID',
+                      label: AppText.t(
+                        context,
+                        en: 'Medical ID',
+                        km: 'អត្តសញ្ញាណវេជ្ជសាស្ត្រ',
+                      ),
                     ),
                   ),
                   const Center(
@@ -435,7 +487,6 @@ class _ContactsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Row(
       children: [
         const Icon(
@@ -454,11 +505,7 @@ class _ContactsHeader extends StatelessWidget {
         ),
         const Spacer(),
         IconButton(
-          icon: Icon(
-            Icons.settings_outlined,
-            size: 18,
-            color: theme.colorScheme.onSurface,
-          ),
+          icon: const Icon(Icons.settings_outlined, size: 18),
           onPressed: () {
             Navigator.of(context).push(
               MaterialPageRoute(
@@ -490,13 +537,12 @@ class _EmergencyContactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.75)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -516,10 +562,10 @@ class _EmergencyContactCard extends StatelessWidget {
               children: [
                 Text(
                   data.name,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
-                    color: theme.colorScheme.onSurface,
+                    color: AppColors.textDark,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -534,10 +580,10 @@ class _EmergencyContactCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   data.phone,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
-                    color: theme.colorScheme.onSurface,
+                    color: AppColors.textDark,
                   ),
                 ),
               ],
@@ -573,7 +619,6 @@ class _ContactIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -582,7 +627,7 @@ class _ContactIconButton extends StatelessWidget {
         height: 28,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.75)),
+          border: Border.all(color: AppColors.border),
         ),
         child: Icon(icon, size: 16, color: color),
       ),

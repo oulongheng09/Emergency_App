@@ -6,11 +6,13 @@ import '../theme/app_text_styles.dart';
 class FirstAidCard extends StatefulWidget {
   final String title;
   final String? subtitle;
+  final String? helperText;
   final IconData icon;
   final VoidCallback? onTap;
-  final Color backgroundColor;
-  final Color foregroundColor;
-  final Color borderColor;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+  final Color? borderColor;
+  final Color accentColor;
   final double radius;
   final double iconSize;
   final double height;
@@ -22,15 +24,17 @@ class FirstAidCard extends StatefulWidget {
     required this.title,
     required this.icon,
     this.subtitle,
+    this.helperText,
     this.onTap,
-    this.backgroundColor = AppColors.card,
-    this.foregroundColor = AppColors.textDark,
-    this.borderColor = AppColors.border,
+    this.backgroundColor,
+    this.foregroundColor,
+    this.borderColor,
+    this.accentColor = AppColors.primaryRed,
     this.radius = 16,
-    this.iconSize = 70,
-    this.height = 120,
-    this.padding = const EdgeInsets.all(16),
-    this.alignment = CrossAxisAlignment.center,
+    this.iconSize = 66,
+    this.height = 132,
+    this.padding = const EdgeInsets.all(14),
+    this.alignment = CrossAxisAlignment.start,
   });
 
   @override
@@ -39,8 +43,8 @@ class FirstAidCard extends StatefulWidget {
 
 class _FirstAidCardState extends State<FirstAidCard>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
 
   @override
   void initState() {
@@ -53,13 +57,8 @@ class _FirstAidCardState extends State<FirstAidCard>
 
     _scaleAnimation = Tween<double>(
       begin: 1,
-      end: 0.95,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOut,
-      ),
-    );
+      end: 0.96,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
   }
 
   Future<void> _handleTap() async {
@@ -77,68 +76,153 @@ class _FirstAidCardState extends State<FirstAidCard>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final resolvedForeground =
+        widget.foregroundColor ?? theme.colorScheme.onSurface;
+    final resolvedBackground =
+        widget.backgroundColor ?? theme.colorScheme.surface;
+    final resolvedBorder =
+        widget.borderColor ??
+        theme.dividerColor.withValues(alpha: isDarkMode ? 0.85 : 0.7);
+    final titleStyle = AppTextStyles.sectionTitle.copyWith(
+      color: resolvedForeground,
+      fontSize: 15,
+    );
+    final bodyStyle = AppTextStyles.body.copyWith(
+      color: resolvedForeground.withValues(alpha: 0.75),
+      height: 1.3,
+    );
+
     final card = AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: child,
-        );
+        return Transform.scale(scale: _scaleAnimation.value, child: child);
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        height: widget.height,
+        constraints: BoxConstraints(minHeight: widget.height),
         padding: widget.padding,
         decoration: BoxDecoration(
-          color: widget.backgroundColor,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.lerp(
+                    resolvedBackground,
+                    widget.accentColor,
+                    isDarkMode ? 0.18 : 0.08,
+                  ) ??
+                  resolvedBackground,
+              resolvedBackground,
+            ],
+          ),
           borderRadius: BorderRadius.circular(widget.radius),
-          border: Border.all(color: widget.borderColor),
+          border: Border.all(color: resolvedBorder),
           boxShadow: [
             BoxShadow(
-              color: widget.foregroundColor.withValues(alpha: 0.10),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              color: Colors.black.withValues(alpha: isDarkMode ? 0.28 : 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: widget.alignment,
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Container(
-              width: 84,
-              height: 84,
-              decoration: BoxDecoration(
-                color: widget.foregroundColor.withValues(alpha: 0.10),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                widget.icon,
-                color: widget.foregroundColor,
-                size: widget.iconSize * 0.55,
-              ),
-            ),
-
-            const SizedBox(height: 14),
-
-            Text(
-              widget.title,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.sectionTitle.copyWith(
-                color: widget.foregroundColor,
-              ),
-            ),
-
-            if (widget.subtitle != null) ...[
-              const SizedBox(height: 6),
-              Text(
-                widget.subtitle!,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.body.copyWith(
-                  color: widget.foregroundColor,
+            Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: widget.accentColor.withValues(
+                      alpha: isDarkMode ? 0.22 : 0.12,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.accentColor.withValues(
+                          alpha: isDarkMode ? 0.16 : 0.08,
+                        ),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    widget.icon,
+                    color: widget.accentColor,
+                    size: widget.iconSize * 0.42,
+                  ),
                 ),
-              ),
-            ],
+                const Spacer(),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: resolvedForeground.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Column(
+              crossAxisAlignment: widget.alignment,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.title,
+                  textAlign: widget.alignment == CrossAxisAlignment.center
+                      ? TextAlign.center
+                      : TextAlign.start,
+                  style: titleStyle,
+                ),
+                if (widget.subtitle != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.subtitle!,
+                    textAlign: widget.alignment == CrossAxisAlignment.center
+                        ? TextAlign.center
+                        : TextAlign.start,
+                    style: bodyStyle,
+                  ),
+                ],
+                if (widget.helperText != null) ...[
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: widget.alignment == CrossAxisAlignment.center
+                        ? Alignment.center
+                        : Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: widget.accentColor.withValues(
+                          alpha: isDarkMode ? 0.16 : 0.1,
+                        ),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: widget.accentColor.withValues(
+                            alpha: isDarkMode ? 0.24 : 0.16,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        widget.helperText!,
+                        style: TextStyle(
+                          color: widget.accentColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ],
         ),
       ),
@@ -152,8 +236,8 @@ class _FirstAidCardState extends State<FirstAidCard>
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(widget.radius),
-        splashColor: widget.foregroundColor.withValues(alpha: 0.12),
-        highlightColor: widget.foregroundColor.withValues(alpha: 0.05),
+        splashColor: resolvedForeground.withValues(alpha: 0.12),
+        highlightColor: resolvedForeground.withValues(alpha: 0.05),
         onTap: _handleTap,
         child: card,
       ),

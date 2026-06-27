@@ -1,6 +1,7 @@
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:emergency_front_end/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
+import '../l10n/app_text.dart';
 
 class MapHeader extends StatelessWidget {
   const MapHeader({super.key});
@@ -26,9 +27,9 @@ class MapHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: AppColors.border),
             ),
-            child: const Text(
-              'Cambodia',
-              style: TextStyle(
+            child: Text(
+              AppText.t(context, en: 'Cambodia', km: 'កម្ពុជា'),
+              style: const TextStyle(
                 color: AppColors.primaryRed,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,

@@ -1,6 +1,8 @@
-import 'package:emergency_front_end/models/personal_contact_model.dart';
-import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_text.dart';
+import '../../models/personal_contact_model.dart';
+import '../../theme/app_colors.dart';
 
 class AddEditContactScreen extends StatefulWidget {
   const AddEditContactScreen({super.key, this.contact});
@@ -44,7 +46,15 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
 
     if (name.isEmpty || relationship.isEmpty || phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all contact fields.')),
+        SnackBar(
+          content: Text(
+            AppText.t(
+              context,
+              en: 'Please fill in all contact fields.',
+              km: 'សូមបំពេញគ្រប់វាលទំនាក់ទំនង។',
+            ),
+          ),
+        ),
       );
       return;
     }
@@ -73,13 +83,17 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
         backgroundColor: theme.scaffoldBackgroundColor,
         foregroundColor: theme.colorScheme.onSurface,
         elevation: 0,
-        title: Text(_isEditing ? 'Edit Contact' : 'Add Contact'),
+        title: Text(
+          _isEditing
+              ? AppText.t(context, en: 'Edit Contact', km: 'កែប្រែទំនាក់ទំនង')
+              : AppText.t(context, en: 'Add Contact', km: 'បន្ថែមទំនាក់ទំនង'),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Contact Profile',
+            AppText.t(context, en: 'Contact Profile', km: 'ប្រវត្តិទំនាក់ទំនង'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w900,
@@ -88,41 +102,45 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Add people who should receive alerts when you trigger an SOS.',
+            AppText.t(
+              context,
+              en: 'Add people who should receive alerts when you trigger an SOS.',
+              km: 'បន្ថែមមនុស្សដែលនឹងទទួលបានសារ ពេលអ្នកបើក SOS។',
+            ),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: isDarkMode ? Colors.white70 : AppColors.textGrey,
             ),
           ),
-
           const SizedBox(height: 18),
-
           _ContactField(
             isDarkMode: isDarkMode,
             controller: _nameController,
-            label: 'Full Name',
-            hint: 'Enter contact name',
+            label: AppText.t(context, en: 'Full Name', km: 'ឈ្មោះពេញ'),
+            hint: AppText.t(
+              context,
+              en: 'Enter contact name',
+              km: 'បញ្ចូលឈ្មោះទំនាក់ទំនង',
+            ),
             textInputAction: TextInputAction.next,
           ),
-
           const SizedBox(height: 14),
-
           _DropdownRelationshipField(controller: _relationshipController),
-
           const SizedBox(height: 14),
-
           _ContactField(
             controller: _phoneController,
-            label: 'Phone Number',
-            hint: '+855 xx xxx xxx',
+            label: AppText.t(context, en: 'Phone Number', km: 'លេខទូរសព្ទ'),
+            hint: AppText.t(
+              context,
+              en: '+855 xx xxx xxx',
+              km: '+855 xx xxx xxx',
+            ),
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.done,
             isDarkMode: isDarkMode,
           ),
-
           const SizedBox(height: 22),
-
           SizedBox(
             height: 48,
             child: ElevatedButton(
@@ -136,7 +154,17 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                 ),
               ),
               child: Text(
-                _isEditing ? 'SAVE CHANGES' : 'ADD CONTACT',
+                _isEditing
+                    ? AppText.t(
+                        context,
+                        en: 'SAVE CHANGES',
+                        km: 'រក្សាទុកការផ្លាស់ប្តូរ',
+                      )
+                    : AppText.t(
+                        context,
+                        en: 'ADD CONTACT',
+                        km: 'បន្ថែមទំនាក់ទំនង',
+                      ),
                 style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
@@ -178,9 +206,7 @@ class _ContactField extends StatelessWidget {
             color: theme.colorScheme.onSurface,
           ),
         ),
-
         const SizedBox(height: 8),
-
         TextField(
           controller: controller,
           keyboardType: keyboardType,
@@ -221,11 +247,11 @@ class _DropdownRelationshipField extends StatelessWidget {
 
   final TextEditingController controller;
 
-  static const List<String> relationships = [
-    'Family',
-    'Loved One',
-    'Doctor',
-    'Work',
+  static const List<_RelationshipOption> relationships = [
+    _RelationshipOption(en: 'Family', km: 'គ្រួសារ'),
+    _RelationshipOption(en: 'Loved One', km: 'មនុស្សជាទីស្រឡាញ់'),
+    _RelationshipOption(en: 'Doctor', km: 'វេជ្ជបណ្ឌិត'),
+    _RelationshipOption(en: 'Work', km: 'ការងារ'),
   ];
 
   String _normalizeRelationship(String value) {
@@ -236,7 +262,6 @@ class _DropdownRelationshipField extends StatelessWidget {
       case 'sister':
       case 'family':
         return 'Family';
-
       case 'friend':
       case 'wife':
       case 'husband':
@@ -244,15 +269,12 @@ class _DropdownRelationshipField extends StatelessWidget {
       case 'boyfriend':
       case 'loved one':
         return 'Loved One';
-
       case 'doctor':
         return 'Doctor';
-
       case 'colleague':
       case 'boss':
       case 'work':
         return 'Work';
-
       default:
         return 'Family';
     }
@@ -261,12 +283,11 @@ class _DropdownRelationshipField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Relationship',
+          AppText.t(context, en: 'Relationship', km: 'ទំនាក់ទំនង'),
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
@@ -275,7 +296,7 @@ class _DropdownRelationshipField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: controller.text.isEmpty
+          initialValue: controller.text.isEmpty
               ? null
               : _normalizeRelationship(controller.text),
           decoration: InputDecoration(
@@ -287,9 +308,18 @@ class _DropdownRelationshipField extends StatelessWidget {
               borderSide: BorderSide(color: theme.dividerColor),
             ),
           ),
-          hint: const Text('Select relationship'),
+          hint: Text(
+            AppText.t(
+              context,
+              en: 'Select relationship',
+              km: 'ជ្រើសរើសទំនាក់ទំនង',
+            ),
+          ),
           items: relationships.map((item) {
-            return DropdownMenuItem(value: item, child: Text(item));
+            return DropdownMenuItem(
+              value: item.en,
+              child: Text(AppText.t(context, en: item.en, km: item.km)),
+            );
           }).toList(),
           onChanged: (value) {
             controller.text = value ?? '';
@@ -298,4 +328,11 @@ class _DropdownRelationshipField extends StatelessWidget {
       ],
     );
   }
+}
+
+class _RelationshipOption {
+  const _RelationshipOption({required this.en, required this.km});
+
+  final String en;
+  final String km;
 }
