@@ -8,6 +8,7 @@ import '../../widgets/primary_button.dart';
 import '../../widgets/custom_error_dialog.dart';
 import '../../widgets/custom_success_dialog.dart';
 import '../../widgets/loading_dialog.dart';
+import '../../l10n/app_text.dart';
 
 class ProfileScreen extends StatefulWidget {
   final BackendUser? user;
@@ -77,8 +78,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         await CustomErrorDialog.show(
           context,
-          title: 'Loading Failed',
-          message: 'Unable to load your profile information.',
+          title: AppText.t(context, en: 'Loading Failed', km: 'ផ្ទុកបរាជ័យ'),
+          message: AppText.t(
+            context,
+            en: 'Unable to load your profile information.',
+            km: 'មិនអាចផ្ទុកព័ត៌មានប្រវត្តិរបស់អ្នកបានទេ។',
+          ),
         );
       }
     } finally {
@@ -108,8 +113,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (currentUser == null || token == null) {
       await CustomErrorDialog.show(
         context,
-        title: 'Authentication Error',
-        message: 'No authenticated user is available.',
+        title: AppText.t(
+          context,
+          en: 'Authentication Error',
+          km: 'កំហុសការផ្ទៀងផ្ទាត់',
+        ),
+        message: AppText.t(
+          context,
+          en: 'No authenticated user is available.',
+          km: 'មិនមានអ្នកប្រើដែលបានផ្ទៀងផ្ទាត់ទេ។',
+        ),
       );
       return;
     }
@@ -118,8 +131,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (fullName.isEmpty) {
       await CustomErrorDialog.show(
         context,
-        title: 'Validation Error',
-        message: 'Full Name cannot be empty.',
+        title: AppText.t(
+          context,
+          en: 'Validation Error',
+          km: 'កំហុសត្រួតពិនិត្យ',
+        ),
+        message: AppText.t(
+          context,
+          en: 'Full Name cannot be empty.',
+          km: 'ឈ្មោះពេញមិនអាចទទេបានទេ។',
+        ),
       );
       return;
     }
@@ -164,8 +185,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         await CustomSuccessDialog.show(
           context,
-          title: 'Profile Updated',
-          message: 'Your profile has been saved successfully.',
+          title: AppText.t(
+            context,
+            en: 'Profile Updated',
+            km: 'បានអាប់ដេតប្រវត្តិ',
+          ),
+          message: AppText.t(
+            context,
+            en: 'Your profile has been saved successfully.',
+            km: 'ប្រវត្តិរបស់អ្នកត្រូវបានរក្សាទុកជោគជ័យ។',
+          ),
         );
       }
     } catch (error) {
@@ -174,8 +203,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         await CustomErrorDialog.show(
           context,
-          title: 'Update Failed',
-          message: 'Unable to save your profile information.',
+          title: AppText.t(context, en: 'Update Failed', km: 'អាប់ដេតបរាជ័យ'),
+          message: AppText.t(
+            context,
+            en: 'Unable to save your profile information.',
+            km: 'មិនអាចរក្សាទុកព័ត៌មានប្រវត្តិរបស់អ្នកបានទេ។',
+          ),
         );
       }
     } finally {
@@ -194,16 +227,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Confirm logout'),
-        content: const Text('Are you sure you want to log out?'),
+        title: Text(
+          AppText.t(context, en: 'Confirm logout', km: 'បញ្ជាក់ការចេញ'),
+        ),
+        content: Text(
+          AppText.t(
+            context,
+            en: 'Are you sure you want to log out?',
+            km: 'តើអ្នកពិតជាចង់ចេញពីប្រព័ន្ធមែនទេ?',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(AppText.t(context, en: 'Cancel', km: 'បោះបង់')),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Logout'),
+            child: Text(AppText.t(context, en: 'Logout', km: 'ចេញ')),
           ),
         ],
       ),
@@ -213,12 +254,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       widget.onLogout?.call();
       if (mounted) {
         AlertDialog(
-          title: const Text('Logged out.'),
-          content: const Text('You have been successfully logged out.'),
+          title: Text(AppText.t(context, en: 'Logged out.', km: 'បានចេញ')),
+          content: Text(
+            AppText.t(
+              context,
+              en: 'You have been successfully logged out.',
+              km: 'អ្នកបានចេញពីប្រព័ន្ធជោគជ័យហើយ។',
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
+              child: Text(AppText.t(context, en: 'OK', km: 'យល់ព្រម')),
             ),
           ],
         );
@@ -241,7 +288,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Settings', style: AppTextStyles.appTitle),
+        title: Text(
+          AppText.t(context, en: 'Settings', km: 'ការកំណត់'),
+          style: AppTextStyles.appTitle,
+        ),
       ),
       body: SafeArea(
         child: _isLoading

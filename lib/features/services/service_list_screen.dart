@@ -8,6 +8,7 @@ import 'package:emergency_front_end/models/service_location.dart';
 import 'package:emergency_front_end/features/profile/profile_screen.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:emergency_front_end/core/services/emergency_services_api.dart';
+import 'package:emergency_front_end/l10n/app_text.dart';
 import 'package:flutter/material.dart';
 
 class ServiceListScreen extends StatefulWidget {
@@ -70,7 +71,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
     final hasError = _error != null;
 
     return ServiceScreenShell(
-      title: widget.kind.navigationTitle,
+      title: widget.kind.localizedNavigationTitle,
       onSettingsTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -89,7 +90,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
               padding: const EdgeInsets.fromLTRB(8, 2, 8, 20),
               children: [
                 Text(
-                  widget.kind.listTitle,
+                widget.kind.localizedListTitle,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
@@ -100,8 +101,16 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                 const SizedBox(height: 6),
                 Text(
                   hasError
-                      ? 'Using local data. Backend connection failed.'
-                      : 'Found ${items.length} emergency facilities in your radius.',
+                      ? AppText.t(
+                          context,
+                          en: 'Using local data. Backend connection failed.',
+                          km: 'កំពុងប្រើទិន្នន័យមូលដ្ឋាន។ ការតភ្ជាប់ទៅម៉ាស៊ីនមេបរាជ័យ។',
+                        )
+                      : AppText.t(
+                          context,
+                          en: 'Found ${items.length} emergency facilities in your radius.',
+                          km: 'រកឃើញមណ្ឌលសង្គ្រោះបន្ទាន់ ${items.length} កន្លែងនៅជុំវិញអ្នក។',
+                        ),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -114,7 +123,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Center(
                       child: Text(
-                        'No services available',
+                        AppText.t(context, en: 'No services available', km: 'មិនមានសេវាទេ'),
                         style: TextStyle(
                           fontSize: 14,
                           color: AppColors.textGrey,

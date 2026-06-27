@@ -5,6 +5,7 @@ import 'package:emergency_front_end/features/nearby/nearby_screen.dart';
 import 'package:emergency_front_end/features/profile/profile_screen.dart';
 import 'package:emergency_front_end/models/backend_user.dart';
 import 'package:emergency_front_end/models/emergency_service_kind.dart';
+import 'package:emergency_front_end/state/app_settings_provider.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:emergency_front_end/theme/app_text_styles.dart';
 import 'package:emergency_front_end/widgets/emergency_sos_button.dart';
@@ -97,8 +98,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 14),
                         Text(
                           _servicesUnlocked
-                              ? 'Nearby emergency access is active.'
-                              : 'Hold the SOS button continuously for 3 seconds.',
+                              ? _t(
+                                  context,
+                                  en: 'Nearby emergency access is active.',
+                                  km: 'ចូលប្រើសេវាបន្ទាន់នៅជិតបានដំណើរការ។',
+                                )
+                              : _t(
+                                  context,
+                                  en: 'Hold the SOS button continuously for 3 seconds.',
+                                  km: 'ចុចសង្កត់ប៊ូតុង SOS រយៈពេល 3 វិនាទីបន្តបន្ទាប់។',
+                                ),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: isDarkMode
@@ -115,7 +124,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icons.restart_alt_rounded,
                               size: 18,
                             ),
-                            label: const Text('Reset SOS'),
+                            label: Text(
+                              _t(
+                                context,
+                                en: 'Reset SOS',
+                                km: 'កំណត់ SOS ឡើងវិញ',
+                              ),
+                            ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: colorScheme.primary,
                               side: BorderSide(
@@ -165,7 +180,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Emergency Services',
+                                    _t(
+                                      context,
+                                      en: 'Emergency Services',
+                                      km: 'សេវាបន្ទាន់',
+                                    ),
                                     style: theme.textTheme.headlineSmall
                                         ?.copyWith(
                                           fontWeight: FontWeight.w900,
@@ -175,8 +194,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                   const SizedBox(height: 6),
                                   Text(
                                     _servicesUnlocked
-                                        ? 'Tap any service to open nearby results around your SOS location.'
-                                        : 'These nearby service shortcuts unlock after a successful SOS hold.',
+                                        ? _t(
+                                            context,
+                                            en: 'Tap any service to open nearby results around your SOS location.',
+                                            km: 'ចុចសេវាមួយដើម្បីមើលលទ្ធផលនៅជិតទីតាំង SOS របស់អ្នក។',
+                                          )
+                                        : _t(
+                                            context,
+                                            en: 'These nearby service shortcuts unlock after a successful SOS hold.',
+                                            km: 'ផ្លូវកាត់សេវានៅជិតនេះនឹងដំណើរការ បន្ទាប់ពីចុច SOS បានជោគជ័យ។',
+                                          ),
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       height: 1.4,
                                       color: isDarkMode
@@ -201,7 +228,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
-                                _servicesUnlocked ? 'ACTIVE' : 'LOCKED',
+                                _servicesUnlocked
+                                    ? _t(context, en: 'ACTIVE', km: 'ដំណើរការ')
+                                    : _t(context, en: 'LOCKED', km: 'បិទ'),
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w900,
@@ -364,18 +393,22 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Reset SOS'),
-          content: const Text(
-            'This will end emergency mode and lock the nearby service shortcuts again.',
+          title: Text(_t(context, en: 'Reset SOS', km: 'កំណត់ SOS ឡើងវិញ')),
+          content: Text(
+            _t(
+              context,
+              en: 'This will end emergency mode and lock the nearby service shortcuts again.',
+              km: 'វានឹងបញ្ចប់មុខងារបន្ទាន់ ហើយបិទផ្លូវកាត់សេវានៅជិតឡើងវិញ។',
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(_t(context, en: 'Cancel', km: 'បោះបង់')),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Reset'),
+              child: Text(_t(context, en: 'Reset', km: 'កំណត់ឡើងវិញ')),
             ),
           ],
         );
@@ -405,6 +438,10 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => NearbyScreen(kind: kind)));
+  }
+
+  String _t(BuildContext context, {required String en, required String km}) {
+    return AppSettingsScope.of(context).isKhmer ? km : en;
   }
 
   void _showMessage(String message, {bool error = false}) {
@@ -589,6 +626,7 @@ class _LocationHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final settings = AppSettingsScope.of(context);
     final location = (user?.location ?? user?.address ?? '').trim();
     final displayLocation = location.isEmpty ? 'Set location' : location;
 
@@ -622,6 +660,40 @@ class _LocationHeader extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         const Text('KhmerSOS', style: AppTextStyles.appTitle),
+        const SizedBox(width: 8),
+        InkWell(
+          onTap: settings.toggleLanguage,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: theme.dividerColor.withValues(alpha: 0.75),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.language_rounded,
+                  size: 14,
+                  color: theme.colorScheme.onSurface,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  settings.isKhmer ? 'ខ្មែរ' : 'EN',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         const Spacer(),
         IconButton(
           icon: Icon(

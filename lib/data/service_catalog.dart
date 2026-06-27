@@ -1,3 +1,4 @@
+import '../l10n/app_text.dart';
 import 'package:emergency_front_end/models/emergency_service_kind.dart';
 import 'package:emergency_front_end/models/service_location.dart';
 import 'package:latlong2/latlong.dart';
@@ -6,20 +7,53 @@ class NearbyScreenContent {
   const NearbyScreenContent({
     required this.kind,
     required this.protocolTitle,
+    this.protocolTitleKm,
     required this.protocolBody,
+    this.protocolBodyKm,
     required this.nearbyItems,
     this.helpBullets = const <String>[],
+    this.helpBulletsKm = const <String>[],
     this.tags = const <String>[],
+    this.tagsKm = const <String>[],
     this.footerNote,
+    this.footerNoteKm,
   });
 
   final EmergencyServiceKind kind;
   final String protocolTitle;
+  final String? protocolTitleKm;
   final String protocolBody;
+  final String? protocolBodyKm;
   final List<ServiceLocation> nearbyItems;
   final List<String> helpBullets;
+  final List<String> helpBulletsKm;
   final List<String> tags;
+  final List<String> tagsKm;
   final String? footerNote;
+  final String? footerNoteKm;
+
+  String get localizedProtocolTitle =>
+      AppLocaleState.isKhmer && protocolTitleKm != null
+      ? protocolTitleKm!
+      : protocolTitle;
+
+  String get localizedProtocolBody =>
+      AppLocaleState.isKhmer && protocolBodyKm != null
+      ? protocolBodyKm!
+      : protocolBody;
+
+  List<String> get localizedHelpBullets =>
+      AppLocaleState.isKhmer && helpBulletsKm.isNotEmpty
+      ? helpBulletsKm
+      : helpBullets;
+
+  List<String> get localizedTags =>
+      AppLocaleState.isKhmer && tagsKm.isNotEmpty ? tagsKm : tags;
+
+  String? get localizedFooterNote =>
+      AppLocaleState.isKhmer && footerNoteKm != null
+      ? footerNoteKm
+      : footerNote;
 }
 
 const List<ServiceLocation> hospitalLocations = [
@@ -277,39 +311,63 @@ NearbyScreenContent nearbyContentFor(EmergencyServiceKind kind) {
       return NearbyScreenContent(
         kind: kind,
         protocolTitle: 'Emergency Support',
+        protocolTitleKm: 'ជំនួយបន្ទាន់',
         protocolBody:
             'Access hospital emergency rooms, critical care, and urgent treatment facilities in your area.',
+        protocolBodyKm:
+            'ចូលទៅកាន់បន្ទប់សង្គ្រោះបន្ទាន់ មណ្ឌលថែទាំពិសេស និងកន្លែងព្យាបាលបន្ទាន់នៅជិតអ្នក។',
         nearbyItems: hospitalLocations.take(3).toList(),
       );
     case EmergencyServiceKind.police:
       return NearbyScreenContent(
         kind: kind,
         protocolTitle: 'Emergency Protocol',
+        protocolTitleKm: 'វិធានការបន្ទាន់',
         protocolBody:
             'Contact the Police Department immediately for active crimes, threats to public safety, traffic accidents with injuries, or suspicious activity. For non-emergencies, use the nearby stations below.',
+        protocolBodyKm:
+            'ទាក់ទងនគរបាលភ្លាមៗសម្រាប់បទល្មើសកំពុងកើតឡើង គ្រោះថ្នាក់ដល់សុវត្ថិភាពសាធារណៈ គ្រោះថ្នាក់ចរាចរណ៍មានរបួស ឬសកម្មភាពគួរឲ្យសង្ស័យ។ សម្រាប់ករណីមិនបន្ទាន់ សូមប្រើស្ថានីយខាងក្រោម។',
         nearbyItems: policeLocations,
         footerNote: 'Abuse of emergency lines is a punishable offense.',
+        footerNoteKm:
+            'ការប្រើប្រាស់លេខបន្ទាន់ខុសគោលបំណង គឺជាបទល្មើសអាចផ្តន្ទាទោសបាន។',
       );
     case EmergencyServiceKind.ambulance:
       return NearbyScreenContent(
         kind: kind,
         protocolTitle: 'When to Call',
+        protocolTitleKm: 'ពេលណាគួរហៅ',
         protocolBody: '',
+        protocolBodyKm: '',
         nearbyItems: ambulanceLocations,
         helpBullets: const [
           'Unconsciousness or severe chest pain',
           'Difficulty breathing or severe bleeding',
           'Suspected stroke or major trauma',
         ],
+        helpBulletsKm: const [
+          'សន្លប់ ឬឈឺទ្រូងខ្លាំង',
+          'ពិបាកដកដង្ហើម ឬហូរឈាមខ្លាំង',
+          'សង្ស័យដាច់សរសៃឈាមខួរក្បាល ឬរបួសធ្ងន់',
+        ],
       );
     case EmergencyServiceKind.fireDepartment:
       return NearbyScreenContent(
         kind: kind,
         protocolTitle: 'Safety First',
+        protocolTitleKm: 'សុវត្ថិភាពជាមុន',
         protocolBody:
             'Evacuate immediately before making an emergency call. Do not use elevators during a fire.',
+        protocolBodyKm:
+            'ជម្លៀសចេញភ្លាមៗមុននឹងហៅលេខបន្ទាន់។ កុំប្រើជណ្តើរយន្តពេលមានភ្លើងឆេះ។',
         nearbyItems: fireLocations,
         tags: const ['Active Fire', 'Rescue', 'Gas Leak', 'Accident'],
+        tagsKm: const [
+          'ភ្លើងកំពុងឆេះ',
+          'សង្គ្រោះ',
+          'លេចធ្លាយឧស្ម័ន',
+          'គ្រោះថ្នាក់',
+        ],
       );
   }
 }
