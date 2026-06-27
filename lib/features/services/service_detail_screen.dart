@@ -6,6 +6,7 @@ import 'package:emergency_front_end/models/backend_user.dart';
 import 'package:emergency_front_end/features/profile/profile_screen.dart';
 import 'package:emergency_front_end/features/map/map_screen.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
+import 'package:emergency_front_end/l10n/app_text.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter/material.dart';
 
@@ -28,7 +29,11 @@ class ServiceDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ServiceScreenShell(
-      title: '${location.kind.navigationTitle} Details',
+      title: AppText.t(
+        context,
+        en: '${location.kind.localizedNavigationTitle} Details',
+        km: 'ព័ត៌មានលម្អិត ${location.kind.localizedNavigationTitle}',
+      ),
       onSettingsTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -47,7 +52,7 @@ class ServiceDetailScreen extends StatelessWidget {
           _HeroPanel(location: location),
           const SizedBox(height: 14),
           Text(
-            location.name.toUpperCase(),
+            location.localizedName.toUpperCase(),
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w900,
@@ -65,7 +70,7 @@ class ServiceDetailScreen extends StatelessWidget {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  location.address,
+                  location.localizedAddress,
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -81,9 +86,9 @@ class ServiceDetailScreen extends StatelessWidget {
           _DirectLineCard(location: location),
           const SizedBox(height: 16),
           ServiceDetailSection(
-            title: location.summaryTitle,
+            title: location.localizedSummaryTitle,
             children: [
-              for (final item in location.detailHighlights) ...[
+              for (final item in location.localizedDetailHighlights) ...[
                 _DetailFeatureRow(
                   label: item,
                   color: location.kind.color,
@@ -109,12 +114,17 @@ class _HeroPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     return Container(
       height: 132,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
-          colors: [location.kind.color.withValues(alpha: 0.25), Colors.white],
+          colors: [
+            location.kind.color.withValues(alpha: isDarkMode ? 0.22 : 0.25),
+            theme.colorScheme.surface,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -140,7 +150,7 @@ class _HeroPanel extends StatelessWidget {
                   width: 70,
                   height: 70,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
                       color: location.kind.color.withValues(alpha: 0.18),
@@ -163,7 +173,7 @@ class _HeroPanel extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    location.statusLabel,
+                    location.localizedStatusLabel,
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -187,10 +197,12 @@ class _DirectLineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFECEC),
+        color: isDarkMode ? const Color(0xFF3A2023) : const Color(0xFFFFECEC),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -199,8 +211,8 @@ class _DirectLineCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'DIRECT LINE',
+                Text(
+                  AppText.t(context, en: 'DIRECT LINE', km: 'ខ្សែផ្ទាល់'),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -223,7 +235,7 @@ class _DirectLineCard extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
             ),
             child: IconButton(
@@ -362,8 +374,12 @@ class _DirectionsPreview extends StatelessWidget {
                         foregroundColor: Colors.white,
                       ),
                       icon: const Icon(Icons.navigation),
-                      label: const Text(
-                        'GET DIRECTIONS',
+                      label: Text(
+                        AppText.t(
+                          context,
+                          en: 'GET DIRECTIONS',
+                          km: 'ទទួលទិសដៅ',
+                        ),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),

@@ -2,6 +2,7 @@ import 'package:emergency_front_end/features/personal_contacts/add_edit_contact_
 import 'package:emergency_front_end/models/backend_user.dart';
 import 'package:emergency_front_end/models/personal_contact_model.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
+import 'package:emergency_front_end/l10n/app_text.dart';
 import '../profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:emergency_front_end/core/services/backend_api_service.dart';
@@ -21,8 +22,7 @@ class PersonalContactsScreen extends StatefulWidget {
   });
 
   @override
-  State<PersonalContactsScreen> createState() =>
-      _PersonalContactsScreenState();
+  State<PersonalContactsScreen> createState() => _PersonalContactsScreenState();
 }
 
 class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
@@ -137,10 +137,16 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(' Contact added successfully'),
+          SnackBar(
+            content: Text(
+              AppText.t(
+                context,
+                en: 'Contact added successfully',
+                km: 'បានបន្ថែមទំនាក់ទំនងជោគជ័យ',
+              ),
+            ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -178,10 +184,16 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(' Contact updated successfully'),
+          SnackBar(
+            content: Text(
+              AppText.t(
+                context,
+                en: 'Contact updated successfully',
+                km: 'បានអាប់ដេតទំនាក់ទំនងជោគជ័យ',
+              ),
+            ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -204,16 +216,27 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Contact'),
-          content: Text('Are you sure you want to delete ${contact.name}?'),
+          title: Text(
+            AppText.t(context, en: 'Delete Contact', km: 'លុបទំនាក់ទំនង'),
+          ),
+          content: Text(
+            AppText.t(
+              context,
+              en: 'Are you sure you want to delete ${contact.name}?',
+              km: 'តើអ្នកពិតជាចង់លុប ${contact.name} មែនទេ?',
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(AppText.t(context, en: 'Cancel', km: 'បោះបង់')),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              child: Text(
+                AppText.t(context, en: 'Delete', km: 'លុប'),
+                style: const TextStyle(color: Colors.red),
+              ),
             ),
           ],
         );
@@ -231,10 +254,16 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(' Contact deleted successfully'),
+          SnackBar(
+            content: Text(
+              AppText.t(
+                context,
+                en: 'Contact deleted successfully',
+                km: 'បានលុបទំនាក់ទំនងជោគជ័យ',
+              ),
+            ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -242,7 +271,13 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(' Failed to delete contact: $e'),
+            content: Text(
+              AppText.t(
+                context,
+                en: 'Failed to delete contact: $e',
+                km: 'លុបទំនាក់ទំនងបរាជ័យ: $e',
+              ),
+            ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -269,8 +304,12 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
               onLogout: widget.onLogout,
             ),
             const SizedBox(height: 6),
-            const Text(
-              'My Emergency Contacts',
+            Text(
+              AppText.t(
+                context,
+                en: 'My Emergency Contacts',
+                km: 'ទំនាក់ទំនងបន្ទាន់របស់ខ្ញុំ',
+              ),
               style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.w900,
@@ -279,8 +318,12 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'These individuals will be notified instantly when you trigger an SOS alert.',
+            Text(
+              AppText.t(
+                context,
+                en: 'These individuals will be notified instantly when you trigger an SOS alert.',
+                km: 'មនុស្សទាំងនេះនឹងទទួលបានការជូនដំណឹងភ្លាមៗពេលអ្នកបើក SOS។',
+              ),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -302,9 +345,9 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text(
-                  'ADD CONTACT',
-                  style: TextStyle(fontWeight: FontWeight.w900),
+                label: Text(
+                  AppText.t(context, en: 'ADD CONTACT', km: 'បន្ថែមទំនាក់ទំនង'),
+                  style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
             ),
@@ -325,7 +368,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: const Color(0xFFD5E6FF)),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -337,7 +380,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                       ),
                       SizedBox(width: 6),
                       Text(
-                        'Setup Tip',
+                        AppText.t(context, en: 'Setup Tip', km: 'ដំណឹងត្រៀម'),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
@@ -348,7 +391,11 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'We recommend having at least 3 active emergency contacts for redundancy in critical situations.',
+                    AppText.t(
+                      context,
+                      en: 'We recommend having at least 3 active emergency contacts for redundancy in critical situations.',
+                      km: 'យើងស្នើឲ្យមានយ៉ាងហោចណាស់ 3 ទំនាក់ទំនងបន្ទាន់សកម្ម ដើម្បីមានការបម្រុងក្នុងស្ថានការណ៍សំខាន់ៗ។',
+                    ),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -377,7 +424,11 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                     top: 18,
                     child: _PreviewTile(
                       icon: Icons.add_box_outlined,
-                      label: 'Contacts',
+                      label: AppText.t(
+                        context,
+                        en: 'Contacts',
+                        km: 'ទំនាក់ទំនង',
+                      ),
                     ),
                   ),
                   Positioned(
@@ -385,7 +436,11 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                     top: 18,
                     child: _PreviewTile(
                       icon: Icons.shield_outlined,
-                      label: 'SOS Alerts',
+                      label: AppText.t(
+                        context,
+                        en: 'SOS Alerts',
+                        km: 'ការជូនដំណឹង SOS',
+                      ),
                     ),
                   ),
                   Positioned(
@@ -393,7 +448,11 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
                     bottom: 18,
                     child: _PreviewTile(
                       icon: Icons.wallet_outlined,
-                      label: 'Medical ID',
+                      label: AppText.t(
+                        context,
+                        en: 'Medical ID',
+                        km: 'អត្តសញ្ញាណវេជ្ជសាស្ត្រ',
+                      ),
                     ),
                   ),
                   const Center(

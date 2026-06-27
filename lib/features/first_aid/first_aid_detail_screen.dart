@@ -6,6 +6,7 @@ import '../../theme/app_text_styles.dart';
 import '../../widgets/primary_button.dart';
 import 'package:emergency_front_end/features/profile/profile_screen.dart';
 import 'package:emergency_front_end/models/backend_user.dart';
+import '../../l10n/app_text.dart';
 
 class FirstAidDetailScreen extends StatelessWidget {
   final String title;
@@ -41,7 +42,9 @@ class FirstAidDetailScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: theme.scaffoldBackgroundColor,
         foregroundColor: AppColors.primaryRed,
-        title: Text('$title Instructions'),
+        title: Text(
+          AppText.t(context, en: '$title Instructions', km: 'ការណែនាំ $title'),
+        ),
         centerTitle: true,
         elevation: 0,
         actions: [
@@ -111,7 +114,11 @@ class FirstAidDetailScreen extends StatelessWidget {
                           horizontal: isTablet ? 18 : 10,
                         ),
                         child: Text(
-                          'Stay Calm. Follow these steps.',
+                          AppText.t(
+                            context,
+                            en: 'Stay Calm. Follow these steps.',
+                            km: 'ស្ងប់ស្ងាត់។ អនុវត្តតាមជំហានខាងក្រោម។',
+                          ),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: isTablet ? 27 : 24,
@@ -145,7 +152,11 @@ class FirstAidDetailScreen extends StatelessWidget {
                     isTablet ? 28 : 22,
                   ),
                   child: PrimaryButton(
-                    text: emergencyCallLabel,
+                    text: AppText.t(
+                      context,
+                      en: emergencyCallLabel,
+                      km: 'ហៅបន្ទាន់: 119',
+                    ),
                     icon: Icons.emergency,
                     onPressed: () {},
                   ),

@@ -8,6 +8,7 @@ import 'package:emergency_front_end/widgets/service_screen_shell.dart';
 import 'package:emergency_front_end/theme/app_colors.dart';
 import 'package:emergency_front_end/core/services/emergency_services_api.dart';
 import 'package:emergency_front_end/models/service_location.dart';
+import 'package:emergency_front_end/l10n/app_text.dart';
 import 'package:flutter/material.dart';
 
 class NearbyScreen extends StatefulWidget {
@@ -63,7 +64,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
     final hasError = _error != null;
 
     return ServiceScreenShell(
-      title: widget.kind.navigationTitle,
+      title: widget.kind.localizedNavigationTitle,
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -73,7 +74,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
                 const SizedBox(height: 10),
                 Center(
                   child: Text(
-                    widget.kind.listTitle,
+                    widget.kind.localizedListTitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 26,
@@ -87,7 +88,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text(
-                    widget.kind.description,
+                    widget.kind.localizedDescription,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 11,
@@ -122,7 +123,11 @@ class _NearbyScreenState extends State<NearbyScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Using local data. Backend connection failed.',
+                            AppText.t(
+                              context,
+                              en: 'Using local data. Backend connection failed.',
+                              km: 'កំពុងប្រើទិន្នន័យមូលដ្ឋាន។ ការតភ្ជាប់ទៅម៉ាស៊ីនមេបរាជ័យ។',
+                            ),
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
@@ -134,11 +139,11 @@ class _NearbyScreenState extends State<NearbyScreen> {
                     ),
                   ),
                 ],
-                if (content.footerNote != null) ...[
+                if (content.localizedFooterNote != null) ...[
                   const SizedBox(height: 8),
                   Center(
                     child: Text(
-                      content.footerNote!,
+                      content.localizedFooterNote!,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 8,
@@ -165,7 +170,11 @@ class _NearbyScreenState extends State<NearbyScreen> {
                     ),
                     icon: const Icon(Icons.call_rounded, size: 18),
                     label: Text(
-                      'QUICK CALL (${widget.kind.quickCallNumber})',
+                      AppText.t(
+                        context,
+                        en: 'QUICK CALL (${widget.kind.quickCallNumber})',
+                        km: 'ហៅរហ័ស (${widget.kind.quickCallNumber})',
+                      ),
                       style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
                   ),
@@ -177,7 +186,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        content.kind.nearbyTitle.toUpperCase(),
+                        content.kind.localizedNearbyTitle.toUpperCase(),
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
@@ -194,8 +203,8 @@ class _NearbyScreenState extends State<NearbyScreen> {
                           ),
                         );
                       },
-                      child: const Text(
-                        'VIEW MAP',
+                      child: Text(
+                        AppText.t(context, en: 'VIEW MAP', km: 'មើលផែនទី'),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
@@ -210,7 +219,11 @@ class _NearbyScreenState extends State<NearbyScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Center(
                       child: Text(
-                        'No services available',
+                        AppText.t(
+                          context,
+                          en: 'No services available',
+                          km: 'មិនមានសេវាទេ',
+                        ),
                         style: TextStyle(
                           fontSize: 14,
                           color: AppColors.textGrey,
@@ -232,10 +245,14 @@ class _NearbyScreenState extends State<NearbyScreen> {
                     ),
                     const SizedBox(height: 12),
                   ],
-                if (content.tags.isNotEmpty) ...[
+                if (content.localizedTags.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
-                    'EMERGENCY TYPES',
+                    AppText.t(
+                      context,
+                      en: 'EMERGENCY TYPES',
+                      km: 'ប្រភេទបន្ទាន់',
+                    ),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w900,
@@ -247,7 +264,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
                     spacing: 10,
                     runSpacing: 10,
                     children: [
-                      for (final tag in content.tags)
+                      for (final tag in content.localizedTags)
                         Container(
                           width: 150,
                           padding: const EdgeInsets.symmetric(
@@ -348,7 +365,7 @@ class _InfoCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                content.protocolTitle.toUpperCase(),
+                content.localizedProtocolTitle.toUpperCase(),
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
@@ -357,10 +374,10 @@ class _InfoCard extends StatelessWidget {
               ),
             ],
           ),
-          if (content.protocolBody.isNotEmpty) ...[
+          if (content.localizedProtocolBody.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
-              content.protocolBody,
+              content.localizedProtocolBody,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -369,9 +386,9 @@ class _InfoCard extends StatelessWidget {
               ),
             ),
           ],
-          if (content.helpBullets.isNotEmpty) ...[
+          if (content.localizedHelpBullets.isNotEmpty) ...[
             const SizedBox(height: 8),
-            for (final item in content.helpBullets) ...[
+            for (final item in content.localizedHelpBullets) ...[
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
