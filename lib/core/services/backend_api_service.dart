@@ -381,4 +381,64 @@ class BackendApiService {
   Future<void> deleteEmergencyContact(String id) async {
     await _delete('/user-emergency-contacts/$id');
   }
+
+  Future<List<dynamic>> getEmergencyContacts(String userId) async {
+    return _requestList(
+      'GET',
+      '/user-emergency-contacts/user/$userId',
+    );
+  }
+
+  Future<void> createEmergencyContact({
+    required String userId,
+    required String name,
+    required String relationship,
+    required String phone,
+    }) async {
+    await _postJson(
+      '/user-emergency-contacts',
+      {
+        'user_id': userId,
+        'name': name,
+        'relationship': relationship,
+        'phone_number': int.parse(phone),
+      },
+    );
+  }
+
+  Future<void> updateEmergencyContact({
+    required String id,
+    required String name,
+    required String relationship,
+    required String phone,
+    }) async {
+    await _patchJson(
+      '/user-emergency-contacts/$id',
+      {
+        'name': name,
+        'relationship': relationship,
+        'phone_number': int.parse(phone),
+      },
+    );
+  }
+
+  Future<void> _delete(String path) async {
+    final uri = Uri.parse('${AppConstants.apiBaseUrl}$path');
+
+    final response = await http
+        .delete(uri)
+        .timeout(_requestTimeout);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw BackendApiException(
+        response.statusCode,
+        response.body,
+      );
+    }
+  }
+
+  Future<void> deleteEmergencyContact(String id) async {
+    await _delete('/user-emergency-contacts/$id');
+  }
+  
 }
