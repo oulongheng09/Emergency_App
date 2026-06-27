@@ -17,14 +17,6 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _relationshipController;
   late final TextEditingController _phoneController;
-  late _AvatarOption _selectedAvatar;
-
-  static const List<_AvatarOption> _avatarOptions = [
-    _AvatarOption(label: 'Family', icon: Icons.family_restroom_rounded),
-    _AvatarOption(label: 'Loved One', icon: Icons.favorite_rounded),
-    _AvatarOption(label: 'Doctor', icon: Icons.medical_services_rounded),
-    _AvatarOption(label: 'Work', icon: Icons.work_rounded),
-  ];
 
   bool get _isEditing => widget.contact != null;
 
@@ -37,7 +29,6 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
       text: contact?.relationship ?? '',
     );
     _phoneController = TextEditingController(text: contact?.phone ?? '');
-    _selectedAvatar = _avatarOptions.first;
   }
 
   @override
@@ -75,7 +66,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
       name: name,
       relationship: relationship,
       phone: phone,
-      icon: _selectedAvatar.icon,
+      icon: Icons.person,
       iconColor: Colors.blue,
     );
 
@@ -121,32 +112,6 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
               fontWeight: FontWeight.w500,
               color: isDarkMode ? Colors.white70 : AppColors.textGrey,
             ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            AppText.t(context, en: 'Choose Avatar', km: 'ជ្រើសរើសរូបតំណាង'),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              for (final option in _avatarOptions)
-                _AvatarChoice(
-                  option: option,
-                  isSelected: option == _selectedAvatar,
-                  onTap: () {
-                    setState(() {
-                      _selectedAvatar = option;
-                    });
-                  },
-                ),
-            ],
           ),
           const SizedBox(height: 18),
           _ContactField(
@@ -282,11 +247,11 @@ class _DropdownRelationshipField extends StatelessWidget {
 
   final TextEditingController controller;
 
-  static const List<String> relationships = [
-    'Family',
-    'Loved One',
-    'Doctor',
-    'Work',
+  static const List<_RelationshipOption> relationships = [
+    _RelationshipOption(en: 'Family', km: 'គ្រួសារ'),
+    _RelationshipOption(en: 'Loved One', km: 'មនុស្សជាទីស្រឡាញ់'),
+    _RelationshipOption(en: 'Doctor', km: 'វេជ្ជបណ្ឌិត'),
+    _RelationshipOption(en: 'Work', km: 'ការងារ'),
   ];
 
   String _normalizeRelationship(String value) {
@@ -331,7 +296,7 @@ class _DropdownRelationshipField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: controller.text.isEmpty
+          initialValue: controller.text.isEmpty
               ? null
               : _normalizeRelationship(controller.text),
           decoration: InputDecoration(
@@ -351,7 +316,10 @@ class _DropdownRelationshipField extends StatelessWidget {
             ),
           ),
           items: relationships.map((item) {
-            return DropdownMenuItem(value: item, child: Text(item));
+            return DropdownMenuItem(
+              value: item.en,
+              child: Text(AppText.t(context, en: item.en, km: item.km)),
+            );
           }).toList(),
           onChanged: (value) {
             controller.text = value ?? '';
@@ -362,69 +330,9 @@ class _DropdownRelationshipField extends StatelessWidget {
   }
 }
 
-class _AvatarOption {
-  const _AvatarOption({
-    required this.label,
-    required this.icon,
-  });
+class _RelationshipOption {
+  const _RelationshipOption({required this.en, required this.km});
 
-  final String label;
-  final IconData icon;
-}
-
-class _AvatarChoice extends StatelessWidget {
-  const _AvatarChoice({
-    required this.option,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final _AvatarOption option;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: 76,
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryRed.withValues(alpha: 0.12)
-              : theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.primaryRed : theme.dividerColor,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              option.icon,
-              size: 20,
-              color: isSelected
-                  ? AppColors.primaryRed
-                  : theme.colorScheme.onSurface,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              option.label,
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                color: isSelected
-                    ? AppColors.primaryRed
-                    : theme.colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  final String en;
+  final String km;
 }
