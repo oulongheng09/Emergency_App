@@ -9,6 +9,7 @@ import '../../widgets/custom_error_dialog.dart';
 import '../../widgets/custom_success_dialog.dart';
 import '../../widgets/loading_dialog.dart';
 import '../../l10n/app_text.dart';
+import '../../state/app_settings_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   final ValueChanged<BackendSession> onAuthenticated;
@@ -171,6 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final settings = AppSettingsScope.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -192,9 +194,19 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: Column(
                 children: [
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('KhmerSOS', style: AppTextStyles.title),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('KhmerSOS', style: AppTextStyles.title),
+                        ),
+                      ),
+                      _LanguageToggleChip(
+                        isKhmer: settings.isKhmer,
+                        onTap: settings.toggleLanguage,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Align(
@@ -346,6 +358,41 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LanguageToggleChip extends StatelessWidget {
+  const _LanguageToggleChip({required this.isKhmer, required this.onTap});
+
+  final bool isKhmer;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: theme.colorScheme.primary.withValues(alpha: 0.25),
+          ),
+        ),
+        child: Text(
+          isKhmer ? 'EN' : 'ខ្មែរ',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            color: theme.colorScheme.primary,
           ),
         ),
       ),
