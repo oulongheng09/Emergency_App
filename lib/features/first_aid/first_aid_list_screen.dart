@@ -137,184 +137,243 @@ class _FirstAidListScreenState extends State<FirstAidListScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _HeaderBar(
-                onSettingsTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ProfileScreen(
-                        user: widget.user,
-                        token: widget.token,
-                        onSaved: widget.onUserUpdated,
-                        onLogout: widget.onLogout,
-                      ),
-                    ),
-                  );
-                },
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final horizontalPadding = width < 600 ? 16.0 : 22.0;
+            final maxContentWidth = width >= 1100 ? 1040.0 : double.infinity;
+            final crossAxisCount = width < 600
+                ? 1
+                : width < 900
+                ? 2
+                : 3;
+            final cardExtent = width < 600
+                ? 190.0
+                : width < 900
+                ? 190.0
+                : 200.0;
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                8,
+                horizontalPadding,
+                24,
               ),
-              const SizedBox(height: 28),
-              const AppSectionTitle(
-                title: 'First-Aid Guide',
-                subtitle:
-                    'Instant protocols for critical emergencies. Tap any category for immediate instructions.',
-              ),
-              const SizedBox(height: 22),
-              FutureBuilder<List<FirstAidCategory>>(
-                future: _categoriesFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (snapshot.hasError) {
-                    return Center(child: Text(snapshot.error.toString()));
-                  }
-
-                  final categories = snapshot.data ?? [];
-
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: categories.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1.1,
-                        ),
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-
-                      final color = _getCategoryColor(category.name);
-
-                      return FirstAidCard(
-                        title: category.name,
-                        icon: _getCategoryIcon(category.name),
-                        foregroundColor: color,
-                        borderColor: color.withValues(alpha: 0.15),
-                        onTap: () async {
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (_) => const Center(
-                              child: CircularProgressIndicator(),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxContentWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _HeaderBar(
+                        onSettingsTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ProfileScreen(
+                                user: widget.user,
+                                token: widget.token,
+                                onSaved: widget.onUserUpdated,
+                                onLogout: widget.onLogout,
+                              ),
                             ),
                           );
-
-                          try {
-                            final data = await BackendApiService.instance
-                                .fetchFirstAidCategory(category.id);
-
-                            if (!context.mounted) return;
-
-                            Navigator.pop(context); // close loading
-
-                            final tips = (data['tips'] as List)
-                                .map((e) => FirstAidTip.fromJson(e))
-                                .toList();
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => FirstAidDetailScreen(
-                                  title: category.name,
-                                  subtitle: 'Emergency First Aid',
-                                  tips: tips,
-                                  heroIcon: _getCategoryIcon(category.name),
-                                  user: widget.user,
-                                  token: widget.token,
-                                  onUserUpdated: widget.onUserUpdated,
-                                  onLogout: widget.onLogout,
-                                  steps: [],
-                                ),
-                              ),
-                            );
-                          } catch (e) {
-                            if (!context.mounted) return;
-
-                            Navigator.pop(context);
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(e.toString()),
-                                backgroundColor: Colors.red,
+                        },
+                      ),
+                      const SizedBox(height: 28),
+                      const AppSectionTitle(
+                        title: 'First-Aid Guide',
+                        subtitle:
+                            'Instant protocols for critical emergencies. Tap any category for immediate instructions.',
+                      ),
+                      const SizedBox(height: 20),
+                      FutureBuilder<List<FirstAidCategory>>(
+                        future: _categoriesFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 24),
+                                child: CircularProgressIndicator(),
                               ),
                             );
                           }
+
+                          if (snapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Text(snapshot.error.toString()),
+                            );
+                          }
+
+                          final categories = snapshot.data ?? [];
+
+                          return GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: categories.length,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                  mainAxisExtent: cardExtent,
+                                ),
+                            itemBuilder: (context, index) {
+                              final category = categories[index];
+                              final color = _getCategoryColor(category.name);
+
+                              return FirstAidCard(
+                                title: category.name,
+                                subtitle: _categorySubtitle(category.name),
+                                helperText: 'Tap for steps',
+                                icon: _getCategoryIcon(category.name),
+                                foregroundColor: color,
+                                borderColor: color.withValues(alpha: 0.18),
+                                accentColor: color,
+                                onTap: () async {
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (_) => const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+
+                                  try {
+                                    final data = await BackendApiService
+                                        .instance
+                                        .fetchFirstAidCategory(category.id);
+
+                                    if (!context.mounted) return;
+
+                                    Navigator.pop(context); // close loading
+
+                                    final tips = (data['tips'] as List)
+                                        .map((e) => FirstAidTip.fromJson(e))
+                                        .toList();
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => FirstAidDetailScreen(
+                                          title: category.name,
+                                          subtitle: 'Emergency First Aid',
+                                          tips: tips,
+                                          heroIcon: _getCategoryIcon(
+                                            category.name,
+                                          ),
+                                          user: widget.user,
+                                          token: widget.token,
+                                          onUserUpdated: widget.onUserUpdated,
+                                          onLogout: widget.onLogout,
+                                          steps: [],
+                                        ),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    if (!context.mounted) return;
+
+                                    Navigator.pop(context);
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(e.toString()),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                },
+                              );
+                            },
+                          );
                         },
-                      );
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 22),
-              _TrainingBanner(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const TrainingModuleScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-              const AppSectionTitle(title: 'OTHER SCENARIOS'),
-              const SizedBox(height: 12),
-              _ScenarioRow(
-                label: 'Drowning',
-                onTap: () => _openDetail(
-                  context,
-                  title: 'Drowning',
-                  subtitle: 'Get the person to safety',
-                  steps: const [
-                    'Remove the person from water only if safe.',
-                    'Call emergency services.',
-                    'Start rescue breathing if trained.',
-                    'Keep monitoring until help arrives.',
-                  ],
+                      ),
+                      const SizedBox(height: 22),
+                      _TrainingBanner(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TrainingModuleScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      const AppSectionTitle(title: 'OTHER SCENARIOS'),
+                      const SizedBox(height: 12),
+                      _ScenarioRow(
+                        label: 'Drowning',
+                        onTap: () => _openDetail(
+                          context,
+                          title: 'Drowning',
+                          subtitle: 'Get the person to safety',
+                          steps: const [
+                            'Remove the person from water only if safe.',
+                            'Call emergency services.',
+                            'Start rescue breathing if trained.',
+                            'Keep monitoring until help arrives.',
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _ScenarioRow(
+                        label: 'Electric Shock',
+                        onTap: () => _openDetail(
+                          context,
+                          title: 'Electric Shock',
+                          subtitle: 'Disconnect power first',
+                          steps: const [
+                            'Turn off the power source if safe.',
+                            'Do not touch the person until safe.',
+                            'Call emergency services.',
+                            'Check for breathing and injuries.',
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _ScenarioRow(
+                        label: 'Heat Stroke',
+                        onTap: () => _openDetail(
+                          context,
+                          title: 'Heat Stroke',
+                          subtitle: 'Cool fast, call help',
+                          steps: const [
+                            'Move to a cool place immediately.',
+                            'Remove excess clothing.',
+                            'Cool with water and fans.',
+                            'Call emergency services urgently.',
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              _ScenarioRow(
-                label: 'Electric Shock',
-                onTap: () => _openDetail(
-                  context,
-                  title: 'Electric Shock',
-                  subtitle: 'Disconnect power first',
-                  steps: const [
-                    'Turn off the power source if safe.',
-                    'Do not touch the person until safe.',
-                    'Call emergency services.',
-                    'Check for breathing and injuries.',
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              _ScenarioRow(
-                label: 'Heat Stroke',
-                onTap: () => _openDetail(
-                  context,
-                  title: 'Heat Stroke',
-                  subtitle: 'Cool fast, call help',
-                  steps: const [
-                    'Move to a cool place immediately.',
-                    'Remove excess clothing.',
-                    'Cool with water and fans.',
-                    'Call emergency services urgently.',
-                  ],
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
+  }
+
+  String _categorySubtitle(String name) {
+    switch (name.toLowerCase()) {
+      case 'bleeding':
+        return 'Control the flow fast';
+      case 'burns':
+        return 'Cool, cover, protect';
+      case 'choking':
+        return 'Clear the airway';
+      case 'cpr':
+        return 'Life-saving rhythm';
+      case 'snake bite':
+        return 'Immobilize and get help';
+      default:
+        return 'Open the emergency steps';
+    }
   }
 
   void _openDetail(

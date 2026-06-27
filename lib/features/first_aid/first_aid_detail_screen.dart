@@ -63,48 +63,96 @@ class FirstAidDetailScreen extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-                children: [
-                  _HeroCard(title: title, subtitle: subtitle, icon: heroIcon),
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(
-                      'Stay Calm. Follow these steps.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: theme.colorScheme.onSurface,
-                        height: 1.15,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final isTablet = width >= 600;
+            final horizontalPadding = isTablet ? 24.0 : 18.0;
+            final topPadding = isTablet ? 28.0 : 22.0;
+            final bottomPadding = isTablet ? 36.0 : 32.0;
+            final heroSpacing = isTablet ? 36.0 : 30.0;
+            final sectionSpacing = isTablet ? 36.0 : 30.0;
+            final cardSpacing = isTablet ? 18.0 : 14.0;
+            final heroScale = isTablet ? 1.12 : 1.0;
+            final heroTitleSize = isTablet ? 38.0 : 34.0;
+            final heroSubtitleSize = isTablet ? 21.0 : 19.0;
+            final heroIconBox = isTablet ? 156.0 : 144.0;
+            final heroInnerBox = isTablet ? 88.0 : 82.0;
+            final heroIconSize = isTablet ? 42.0 : 40.0;
+            final stepCardPadding = isTablet ? 22.0 : 20.0;
+            final stepNumberBox = isTablet ? 58.0 : 54.0;
+            final stepIconBox = isTablet ? 50.0 : 46.0;
+
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      topPadding,
+                      horizontalPadding,
+                      bottomPadding,
+                    ),
+                    children: [
+                      _HeroCard(
+                        title: title,
+                        subtitle: subtitle,
+                        icon: heroIcon,
+                        outerSize: heroIconBox,
+                        innerSize: heroInnerBox,
+                        iconSize: heroIconSize,
+                        titleSize: heroTitleSize,
+                        subtitleSize: heroSubtitleSize,
+                        scale: heroScale,
                       ),
-                    ),
+                      SizedBox(height: heroSpacing),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 18 : 10,
+                        ),
+                        child: Text(
+                          'Stay Calm. Follow these steps.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: isTablet ? 27 : 24,
+                            fontWeight: FontWeight.w800,
+                            color: theme.colorScheme.onSurface,
+                            height: isTablet ? 1.3 : 1.25,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: sectionSpacing),
+                      for (var i = 0; i < tips.length; i++) ...[
+                        _InstructionStepCard(
+                          number: i + 1,
+                          title: tips[i].title,
+                          description: tips[i].content,
+                          icon: _stepIcon(i),
+                          padding: stepCardPadding,
+                          numberBoxSize: stepNumberBox,
+                          iconBoxSize: stepIconBox,
+                        ),
+                        SizedBox(height: cardSpacing),
+                      ],
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  for (var i = 0; i < tips.length; i++) ...[
-                    _InstructionStepCard(
-                      number: i + 1,
-                      title: tips[i].title,
-                      description: tips[i].content,
-                      icon: _stepIcon(i),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-              child: PrimaryButton(
-                text: emergencyCallLabel,
-                icon: Icons.emergency,
-                onPressed: () {},
-              ),
-            ),
-          ],
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    0,
+                    horizontalPadding,
+                    isTablet ? 28 : 22,
+                  ),
+                  child: PrimaryButton(
+                    text: emergencyCallLabel,
+                    icon: Icons.emergency,
+                    onPressed: () {},
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -130,67 +178,83 @@ class _HeroCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
+  final double outerSize;
+  final double innerSize;
+  final double iconSize;
+  final double titleSize;
+  final double subtitleSize;
+  final double scale;
 
   const _HeroCard({
     required this.title,
     required this.subtitle,
     required this.icon,
+    this.outerSize = 144,
+    this.innerSize = 82,
+    this.iconSize = 40,
+    this.titleSize = 34,
+    this.subtitleSize = 19,
+    this.scale = 1,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Center(
-      child: Column(
-        children: [
-          Container(
-            width: 132,
-            height: 132,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: theme.dividerColor.withValues(alpha: 0.75),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+      child: Transform.scale(
+        scale: scale,
+        child: Column(
+          children: [
+            Container(
+              width: outerSize,
+              height: outerSize,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: theme.dividerColor.withValues(alpha: 0.75),
                 ),
-              ],
-            ),
-            child: Center(
-              child: Container(
-                width: 74,
-                height: 74,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryRed,
-                  borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Container(
+                  width: innerSize,
+                  height: innerSize,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryRed,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: iconSize),
                 ),
-                child: Icon(icon, color: Colors.white, size: 36),
               ),
             ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            title,
-            style: AppTextStyles.title.copyWith(
-              fontSize: 32,
-              color: AppColors.primaryRed,
+            const SizedBox(height: 22),
+            Text(
+              title,
+              style: AppTextStyles.title.copyWith(
+                fontSize: titleSize,
+                color: AppColors.primaryRed,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: subtitleSize,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -201,12 +265,18 @@ class _InstructionStepCard extends StatelessWidget {
   final String title;
   final String description;
   final IconData icon;
+  final double padding;
+  final double numberBoxSize;
+  final double iconBoxSize;
 
   const _InstructionStepCard({
     required this.number,
     required this.title,
     required this.description,
     required this.icon,
+    this.padding = 20,
+    this.numberBoxSize = 54,
+    this.iconBoxSize = 46,
   });
 
   @override
@@ -229,7 +299,7 @@ class _InstructionStepCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: () {},
         child: Container(
-          padding: const EdgeInsets.all(18),
+          padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
             color: cardColor,
             borderRadius: BorderRadius.circular(20),
@@ -242,8 +312,8 @@ class _InstructionStepCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: numberBoxSize,
+                    height: numberBoxSize,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: numberBg,
@@ -252,13 +322,13 @@ class _InstructionStepCard extends StatelessWidget {
                     child: Text(
                       '$number',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.w900,
                         color: numberColor,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,16 +336,16 @@ class _InstructionStepCard extends StatelessWidget {
                         Text(
                           title,
                           style: AppTextStyles.sectionTitle.copyWith(
-                            fontSize: 16,
+                            fontSize: 17,
                             color: titleColor,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Text(
                           description,
                           style: AppTextStyles.body.copyWith(
                             fontSize: 14,
-                            height: 1.5,
+                            height: 1.6,
                             color: descriptionColor,
                           ),
                         ),
@@ -284,17 +354,17 @@ class _InstructionStepCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               Row(
                 children: [
                   Container(
-                    width: 42,
-                    height: 42,
+                    width: iconBoxSize,
+                    height: iconBoxSize,
                     decoration: BoxDecoration(
                       color: iconBg,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(icon, color: AppColors.primaryRed, size: 22),
+                    child: Icon(icon, color: AppColors.primaryRed, size: 24),
                   ),
                 ],
               ),
