@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:emergency_front_end/core/services/backend_api_service.dart';
 import 'package:emergency_front_end/features/nearby/nearby_screen.dart';
 import 'package:emergency_front_end/features/profile/profile_screen.dart';
@@ -29,6 +31,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const Duration _locationTimeout = Duration(seconds: 12);
   static const services = [
     EmergencyServiceKind.police,
     EmergencyServiceKind.hospital,
@@ -222,12 +225,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisCount: crossAxisCount,
                                 mainAxisSpacing: 14,
                                 crossAxisSpacing: 14,
-                                childAspectRatio: isTablet ? 1.45 : 1.18,
+                                childAspectRatio: isTablet ? 1.56 : 1.32,
                               ),
                           itemBuilder: (context, index) {
                             final item = services[index];
                             final tile = QuickActionTile(
                               title: item.homeLabel,
+                              subtitle: item.homeSubtitle,
+                              callLabel: 'Call ${item.quickCallNumber}',
                               icon: item.icon,
                               iconColor: item.color,
                               onTap: () => _handleServiceTap(item),
@@ -337,9 +342,21 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    return Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-    );
+    try {
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
+      ).timeout(_locationTimeout);
+    } on TimeoutException {
+      final lastKnownPosition = await Geolocator.getLastKnownPosition();
+      if (lastKnownPosition != null) {
+        return lastKnownPosition;
+      }
+      throw Exception(
+        'Location lookup took too long. Move to an open area or check GPS/network and try again.',
+      );
+    }
   }
 
   Future<void> _confirmResetSos() async {

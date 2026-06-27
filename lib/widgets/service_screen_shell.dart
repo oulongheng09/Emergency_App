@@ -17,8 +17,10 @@ class ServiceScreenShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -49,10 +51,10 @@ class ServiceScreenShell extends StatelessWidget {
                   if (actions.isEmpty)
                     IconButton(
                       onPressed: onSettingsTap,
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.settings_outlined,
                         size: 18,
-                        color: AppColors.textDark,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                 ],

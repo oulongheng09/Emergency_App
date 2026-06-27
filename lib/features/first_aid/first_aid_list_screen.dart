@@ -14,12 +14,11 @@ import '../profile/profile_screen.dart';
 import '../../core/services/backend_api_service.dart';
 import '../../models/first_aid_category.dart';
 
-
-const _VidCPR = 'videos/cpr.mp4';
-const _VidBurns = 'videos/burn.mp4';
-const _VidBleeding = 'videos/bleeding.mp4';
-const _VidChoking = 'videos/chocking.mp4';
-const _VidSnakeBite = 'videos/snake bite.mp4';
+const _vidCpr = 'videos/cpr.mp4';
+const _vidBurns = 'videos/burn.mp4';
+const _vidBleeding = 'videos/bleeding.mp4';
+const _vidChoking = 'videos/chocking.mp4';
+const _vidSnakeBite = 'videos/snake bite.mp4';
 
 class _TrainingItem {
   final String title;
@@ -37,27 +36,27 @@ const _trainingItems = <_TrainingItem>[
   _TrainingItem(
     title: 'CPR',
     subtitle: 'Cardiopulmonary Resuscitation',
-    videoUrl: _VidCPR,
+    videoUrl: _vidCpr,
   ),
   _TrainingItem(
     title: 'Burns',
     subtitle: 'Cool, cover, and protect',
-    videoUrl: _VidBurns,
+    videoUrl: _vidBurns,
   ),
   _TrainingItem(
     title: 'Bleeding',
     subtitle: 'Pressure first',
-    videoUrl: _VidBleeding,
+    videoUrl: _vidBleeding,
   ),
   _TrainingItem(
     title: 'Choking',
     subtitle: 'Clear the airway',
-    videoUrl: _VidChoking,
+    videoUrl: _vidChoking,
   ),
   _TrainingItem(
     title: 'Snake Bite',
     subtitle: 'Immobilize and get help',
-    videoUrl: _VidSnakeBite,
+    videoUrl: _vidSnakeBite,
   ),
 ];
 
@@ -80,7 +79,6 @@ class FirstAidListScreen extends StatefulWidget {
 }
 
 class _FirstAidListScreenState extends State<FirstAidListScreen> {
-
   late Future<List<FirstAidCategory>> _categoriesFuture;
 
   @override
@@ -89,54 +87,55 @@ class _FirstAidListScreenState extends State<FirstAidListScreen> {
     _categoriesFuture = BackendApiService.instance.fetchFirstAidCategories();
   }
 
-IconData _getCategoryIcon(String name) {
-  switch (name.toLowerCase()) {
-    case 'bleeding':
-      return Icons.bloodtype;
+  IconData _getCategoryIcon(String name) {
+    switch (name.toLowerCase()) {
+      case 'bleeding':
+        return Icons.bloodtype;
 
-    case 'burns':
-      return Icons.local_fire_department;
+      case 'burns':
+        return Icons.local_fire_department;
 
-    case 'choking':
-      return Icons.air;
+      case 'choking':
+        return Icons.air;
 
-    case 'cpr':
-      return Icons.monitor_heart;
+      case 'cpr':
+        return Icons.monitor_heart;
 
-    case 'snake bite':
-      return Icons.crisis_alert;
+      case 'snake bite':
+        return Icons.crisis_alert;
 
-    default:
-      return Icons.medical_services;
+      default:
+        return Icons.medical_services;
+    }
   }
-}
 
-Color _getCategoryColor(String name) {
-  switch (name.toLowerCase()) {
-    case 'bleeding':
-      return const Color(0xFFE53935);
+  Color _getCategoryColor(String name) {
+    switch (name.toLowerCase()) {
+      case 'bleeding':
+        return const Color(0xFFE53935);
 
-    case 'burns':
-      return const Color(0xFFFF6F00);
+      case 'burns':
+        return const Color(0xFFFF6F00);
 
-    case 'choking':
-      return const Color(0xFF29B6F6);
+      case 'choking':
+        return const Color(0xFF29B6F6);
 
-    case 'cpr':
-      return const Color(0xFFD81B60);
+      case 'cpr':
+        return const Color(0xFFD81B60);
 
-    case 'snake bite':
-      return const Color(0xFF43A047);
+      case 'snake bite':
+        return const Color(0xFF43A047);
 
-    default:
-      return AppColors.primaryRed;
+      default:
+        return AppColors.primaryRed;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
@@ -167,35 +166,27 @@ Color _getCategoryColor(String name) {
               FutureBuilder<List<FirstAidCategory>>(
                 future: _categoriesFuture,
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState ==
-                      ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                        snapshot.error.toString(),
-                      ),
-                    );
+                    return Center(child: Text(snapshot.error.toString()));
                   }
 
                   final categories = snapshot.data ?? [];
 
                   return GridView.builder(
                     shrinkWrap: true,
-                    physics:
-                        const NeverScrollableScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: categories.length,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.1,
-                    ),
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 1.1,
+                        ),
                     itemBuilder: (context, index) {
                       final category = categories[index];
 
@@ -238,7 +229,8 @@ Color _getCategoryColor(String name) {
                                   user: widget.user,
                                   token: widget.token,
                                   onUserUpdated: widget.onUserUpdated,
-                                  onLogout: widget.onLogout, steps: [],
+                                  onLogout: widget.onLogout,
+                                  steps: [],
                                 ),
                               ),
                             );
@@ -341,7 +333,8 @@ Color _getCategoryColor(String name) {
           user: widget.user,
           token: widget.token,
           onUserUpdated: widget.onUserUpdated,
-          onLogout: widget.onLogout, tips: [],
+          onLogout: widget.onLogout,
+          tips: [],
         ),
       ),
     );
@@ -355,6 +348,7 @@ class _HeaderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         const Icon(Icons.location_on, color: AppColors.primaryRed, size: 18),
@@ -363,7 +357,11 @@ class _HeaderBar extends StatelessWidget {
         const Spacer(),
         IconButton(
           onPressed: onSettingsTap,
-          icon: const Icon(Icons.settings_outlined, size: 22),
+          icon: Icon(
+            Icons.settings_outlined,
+            size: 22,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
       ],
     );
@@ -386,10 +384,7 @@ class _TrainingBanner extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFF4D4D),
-              Color(0xFFD50032),
-            ],
+            colors: [Color(0xFFFF4D4D), Color(0xFFD50032)],
           ),
           boxShadow: [
             BoxShadow(
@@ -460,10 +455,11 @@ class TrainingModuleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: theme.scaffoldBackgroundColor,
         foregroundColor: AppColors.primaryRed,
         title: const Text('Training Modules'),
         centerTitle: true,
@@ -476,7 +472,7 @@ class TrainingModuleScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final item = _trainingItems[index];
           return Material(
-            color: AppColors.card,
+            color: theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
@@ -493,7 +489,9 @@ class TrainingModuleScreen extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.75),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -501,7 +499,9 @@ class TrainingModuleScreen extends StatelessWidget {
                       width: 42,
                       height: 42,
                       decoration: BoxDecoration(
-                        color: AppColors.lightRed,
+                        color: theme.brightness == Brightness.dark
+                            ? AppColors.primaryRed.withValues(alpha: 0.16)
+                            : AppColors.lightRed,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -517,24 +517,29 @@ class TrainingModuleScreen extends StatelessWidget {
                         children: [
                           Text(
                             item.title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.textDark,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             item.subtitle,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              color: AppColors.textGrey,
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.white70
+                                  : AppColors.textGrey,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right, color: AppColors.textDark),
+                    Icon(
+                      Icons.chevron_right,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ],
                 ),
               ),
@@ -562,9 +567,7 @@ class _TrainingVideoDialogState extends State<_TrainingVideoDialog> {
   @override
   void initState() {
     super.initState();
-  _controller = VideoPlayerController.asset(
-    widget.item.videoUrl,
-  );
+    _controller = VideoPlayerController.asset(widget.item.videoUrl);
     _initializeFuture = _controller.initialize().then((_) {
       _controller
         ..setLooping(true)
@@ -596,10 +599,10 @@ class _TrainingVideoDialogState extends State<_TrainingVideoDialog> {
                 Expanded(
                   child: Text(
                     widget.item.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -661,7 +664,7 @@ class _TrainingVideoDialogState extends State<_TrainingVideoDialog> {
                   return Container(
                     height: 220,
                     decoration: BoxDecoration(
-                      color: AppColors.card,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Center(
@@ -714,7 +717,7 @@ class _ScenarioRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.card,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -723,27 +726,32 @@ class _ScenarioRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.75),
+            ),
           ),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.waves_rounded,
                 size: 20,
-                color: AppColors.textDark,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textDark,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.textDark),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ],
           ),
         ),

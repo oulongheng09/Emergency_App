@@ -55,6 +55,8 @@ class _NearbyScreenState extends State<NearbyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     final content = nearbyContentFor(widget.kind);
 
     final displayServices = _error != null ? content.nearbyItems : _services;
@@ -87,10 +89,10 @@ class _NearbyScreenState extends State<NearbyScreen> {
                   child: Text(
                     widget.kind.description,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textGrey,
+                      color: isDarkMode ? Colors.white70 : AppColors.textGrey,
                       height: 1.35,
                     ),
                   ),
@@ -100,9 +102,15 @@ class _NearbyScreenState extends State<NearbyScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFECEC),
+                      color: isDarkMode
+                          ? const Color(0xFF3A2023)
+                          : const Color(0xFFFFECEC),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFFFCDD2)),
+                      border: Border.all(
+                        color: isDarkMode
+                            ? const Color(0xFF8D5058)
+                            : const Color(0xFFFFCDD2),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -132,10 +140,10 @@ class _NearbyScreenState extends State<NearbyScreen> {
                     child: Text(
                       content.footerNote!,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 8,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textGrey,
+                        color: isDarkMode ? Colors.white60 : AppColors.textGrey,
                       ),
                     ),
                   ),
@@ -170,10 +178,10 @@ class _NearbyScreenState extends State<NearbyScreen> {
                     Expanded(
                       child: Text(
                         content.kind.nearbyTitle.toUpperCase(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.textDark,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                     ),
@@ -226,12 +234,12 @@ class _NearbyScreenState extends State<NearbyScreen> {
                   ],
                 if (content.tags.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'EMERGENCY TYPES',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w900,
-                      color: AppColors.textDark,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -247,9 +255,11 @@ class _NearbyScreenState extends State<NearbyScreen> {
                             vertical: 14,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.border),
+                            border: Border.all(
+                              color: theme.dividerColor.withValues(alpha: 0.75),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -262,10 +272,10 @@ class _NearbyScreenState extends State<NearbyScreen> {
                               Expanded(
                                 child: Text(
                                   tag,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.textDark,
+                                    color: theme.colorScheme.onSurface,
                                   ),
                                 ),
                               ),
@@ -316,13 +326,15 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.75)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,10 +361,10 @@ class _InfoCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               content.protocolBody,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textGrey,
+                color: isDarkMode ? Colors.white70 : AppColors.textGrey,
                 height: 1.45,
               ),
             ),
@@ -363,22 +375,22 @@ class _InfoCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '•',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
-                      color: AppColors.textDark,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       item,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textDark,
+                        color: theme.colorScheme.onSurface,
                         height: 1.4,
                       ),
                     ),
