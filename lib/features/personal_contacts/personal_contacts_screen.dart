@@ -30,6 +30,43 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
   List<PersonalContactModel> _contacts = [];
 
   bool _isLoading = true;
+  IconData _getIcon(String relationship) {
+    switch (relationship.toLowerCase()) {
+      case 'family':
+        return Icons.person_rounded;
+
+      case 'loved one':
+        return Icons.favorite_rounded;
+
+      case 'doctor':
+        return Icons.medical_services_rounded;
+
+      case 'work':
+        return Icons.work_rounded;
+
+      default:
+        return Icons.person_rounded;
+    }
+  }
+
+  Color _getIconColor(String relationship) {
+    switch (relationship.toLowerCase()) {
+      case 'family':
+        return const Color.fromARGB(255, 26, 245, 77);
+
+      case 'doctor':
+        return const Color.fromARGB(255, 248, 16, 16);
+
+      case 'loved one':
+        return const Color.fromARGB(255, 252, 52, 162);
+
+      case 'work':
+        return AppColors.policeBlue;
+
+      default:
+        return AppColors.policeBlue;
+    }
+  }
 
   @override
   void initState() {
@@ -57,13 +94,15 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
 
       setState(() {
         _contacts = data.map<PersonalContactModel>((e) {
+          final relationship = e['relationship'] ?? '';
+
           return PersonalContactModel(
             id: e['id'].toString(),
             name: e['name'] ?? '',
-            relationship: e['relationship'] ?? '',
+            relationship: relationship,
             phone: e['phone_number'].toString(),
-            icon: Icons.person_rounded,
-            iconColor: AppColors.policeBlue,
+            icon: _getIcon(relationship),
+            iconColor: _getIconColor(relationship),
           );
         }).toList();
 
@@ -98,7 +137,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Contact added successfully'),
+            content: Text('Contact added successfully'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -108,7 +147,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Failed to add contact: $e'),
+            content: Text('Failed to add contact: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -139,7 +178,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Contact updated successfully'),
+            content: Text('Contact updated successfully'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -149,7 +188,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Failed to update contact: $e'),
+            content: Text('Failed to update contact: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -192,7 +231,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Contact deleted successfully'),
+            content: Text('Contact deleted successfully'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -202,7 +241,7 @@ class _PersonalContactsScreenState extends State<PersonalContactsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Failed to delete contact: $e'),
+            content: Text('Failed to delete contact: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -506,7 +545,7 @@ class _EmergencyContactCard extends StatelessWidget {
           ),
           _ContactIconButton(
             icon: Icons.edit_outlined,
-            color: AppColors.textDark,
+            color: const Color.fromARGB(255, 0, 170, 255),
             onTap: onEdit,
           ),
           const SizedBox(width: 8),
