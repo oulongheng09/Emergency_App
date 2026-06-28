@@ -224,6 +224,9 @@ The frontend integrates with the following backend modules:
 - `first-aid-categories`
 - `first-aid-tips`
 
+## ERD
+<img width="1510" height="1042" alt="image" src="https://github.com/user-attachments/assets/96b308e1-5cea-41d9-8263-f3cbcde988ec" />
+
 ## Notable Implementation Details
 
 - The frontend automatically uses `http://localhost:3001` by default.
