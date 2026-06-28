@@ -236,6 +236,12 @@ The frontend integrates with the following backend modules:
 
 This project demonstrates full-stack mobile application development using Flutter and NestJS. It includes user authentication, API integration, geolocation, responsive UI design, emergency workflow handling, media integration, and structured modular architecture. The system is suitable as a practical academic project because it combines real-world usability with modern software engineering practices.
 
+## Download APK
+
+Download the latest Android APK from the latest release.
+
+[⬇️ Download KhmerSOS v1.0.0 APK](https://github.com/oulongheng09/Emergency_App/releases/latest)
+
 ## License
 
 This project is intended for academic and educational purposes only.
